@@ -1,0 +1,6 @@
+{
+  "main": "diffy",
+  "output": "diffy.phar",
+  "chmod": "0755",
+  "files": ["diffy", "VERSION"]
+}

@@ -1,5 +1,0 @@
-{
-  "main": "example",
-  "output": "example.phar",
-  "files": ["example", "VERSION"]
-}

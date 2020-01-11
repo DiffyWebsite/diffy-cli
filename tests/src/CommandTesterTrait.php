@@ -1,6 +1,6 @@
 <?php
 
-namespace ExampleProject;
+namespace DiffyCli;
 
 use Symfony\Component\Console\Output\BufferedOutput;
 
