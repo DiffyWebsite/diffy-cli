@@ -26,7 +26,11 @@ $classLoader = require $autoloaderPath;
 $argv = $_SERVER['argv'];
 $appName = "DiffyCli";
 $appVersion = trim(file_get_contents(__DIR__ . '/VERSION'));
-$commandClasses = [ \DiffyCli\Cli\ExampleCommands::class ];
+$commandClasses = [
+  \DiffyCli\Commands\AuthCommand::class,
+  \DiffyCli\Commands\DiffCommand::class,
+  \DiffyCli\Commands\ScreenshotCommand::class,
+];
 $selfUpdateRepository = 'DiffyWebsite/diffy-cli';
 $configPrefix = 'DIFFYCLI';
 $configFilePath = getenv($configPrefix . '_CONFIG') ?: getenv('HOME') . '/.diffy-cli/diffy-cli.yml';

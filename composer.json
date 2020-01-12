@@ -19,10 +19,11 @@
         }
     },
     "require": {
-        "php": ">=7.1"
+        "php": ">=7.1",
+        "consolidation/Robo": "^1.3",
+        "diffywebsite/diffy-php": "1.x-dev"
     },
     "require-dev": {
-        "consolidation/Robo": "^1.3",
         "knplabs/github-api": "^2.7",
         "php-http/guzzle6-adapter": "^1.1",
         "phpunit/phpunit": "^6",
@@ -34,11 +35,6 @@
         "phar:install-tools": [
             "mkdir -p tools",
             "curl -L https://github.com/humbug/box/releases/download/3.8.4/box.phar -o tools/box",
-            "chmod +x tools/box"
-        ],
-        "phar:install-tools2": [
-            "mkdir -p tools",
-            "curl -LSs https://box-project.github.io/box2/installer.php | php",
             "chmod +x tools/box"
         ],
         "phar:build": "env PATH=tools:$PATH box compile",
@@ -57,10 +53,7 @@
         "release": [
             "release VERSION"
         ],
-        "scenario": "scenarios/install",
-        "post-update-cmd": [
-            "dependency-licenses"
-        ]
+        "scenario": "scenarios/install"
     },
     "config": {
         "optimize-autoloader": true,
