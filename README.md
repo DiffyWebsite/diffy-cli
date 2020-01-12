@@ -1,25 +1,11 @@
 # DiffyCli
 
-Put a one-line description of your project here.
+Command-Line tool for interacting with Diffy.
+
+Great for building integrations for your CI/CD tools. Allows scription taking screenshots, diffs, comparing environments.
 
 [![Travis CI](https://travis-ci.org/DiffyWebsite/diffy-cli.svg?branch=master)](https://travis-ci.org/DiffyWebsite/diffy-cli)
-[![Windows CI](https://ci.appveyor.com/api/projects/status/{{PUT_APPVEYOR_STATUS_BADGE_ID_HERE}}?svg=true)](https://ci.appveyor.com/project/DiffyWebsite/diffy-cli)
-[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/DiffyWebsite/diffy-cli/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/DiffyWebsite/diffy-cli/?branch=master)
-[![Coverage Status](https://coveralls.io/repos/github/DiffyWebsite/diffy-cli/badge.svg?branch=master)](https://coveralls.io/github/DiffyWebsite/diffy-cli?branch=master) 
 [![License](https://img.shields.io/badge/license-MIT-408677.svg)](LICENSE)
-
-<!-- 
-There are two choices for LICENSE badges:
-
-1. License using shields.io (above): Can contain any text you want, and has no prerequisites, but must be manually updated if you change the license.
-2. License using poser.pugx.org (below): shows the license that Packagist.org read from your composer.json file. Must register with Packagist to use Poser.
-
-[![License](https://poser.pugx.org/DiffyWebsite/diffy-cli/license)](https://github.com/DiffyWebsite/diffy-cli//master/LICENSE)
--->
-
-## FINISH CUSTOMIZATION
-
-Follow the steps in this section to complete the customization of your new project.
 
 ### Services
 
@@ -34,13 +20,6 @@ Enable those services shown below that have not already been configured:
 | Code coverage             | [Enable Coveralls](https://coveralls.io/repos/new)
 | Package manager           | [Register with Packagist](https://packagist.org/packages/submit)
 | Dependency updates        | [Enable Dependencies.io](https://app.dependencies.io/add-project)
-
-### Commandline Tool
-
-To customize the name of your commandline tool:
-
-- Rename the file `example` (the executable / front controller)
-- Replace any `example` or `example.phar` in [box.json.dist](/box.json.dist) and [.gitignore](/.gitignore) with the desired name for your phar
 
 ### Release Script
 
@@ -122,7 +101,7 @@ The test suite may be run locally by way of some simple composer scripts:
 | Run all tests    | `composer test`
 | PHPUnit tests    | `composer unit`
 | PHP linter       | `composer lint`
-| Code style       | `composer cs`     
+| Code style       | `composer cs`
 | Fix style errors | `composer cbf`
 
 
