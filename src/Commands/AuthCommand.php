@@ -25,5 +25,4 @@ class AuthCommand extends \Robo\Tasks
         Config::saveApiKey($apiKey);
         $this->io()->success("Key is validated and saved");
     }
-
 }

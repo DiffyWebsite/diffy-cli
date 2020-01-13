@@ -16,20 +16,22 @@ class ScreenshotCommand extends \Robo\Tasks
      * @param int $projectId ID of the project
      * @param string $environment Environment of the project. Can be one of "production", "staging", "development", "custom"
      *
+     * @param array $options
+     * @throws \Diffy\InvalidArgumentsException
      * @option wait Wait for the screenshot to be completed
      * @option max-wait Maximum number of seconds to wait for the screenshot to be completed.
      *
      * @usage screenshot:create 342 production Take screenshot from production on project 342.
      * @usage screenshot:create 342 production --wait Take the screenshot and wait till they are completed.
      */
-    public function createScreenshot($projectId, $environment, array $options = ['wait' => FALSE, 'max-wait' => 1200])
+    public function createScreenshot($projectId, $environment, array $options = ['wait' => false, 'max-wait' => 1200])
     {
         $apiKey = Config::getConfig()['key'];
 
         Diffy::setApiKey($apiKey);
         $screenshotId = Screenshot::create($projectId, $environment);
 
-        if (!empty($options['wait']) && $options['wait'] == TRUE) {
+        if (!empty($options['wait']) && $options['wait'] == true) {
             $sleep = 10;
             $max_wait = (int) $options['max-wait'];
             sleep($sleep);

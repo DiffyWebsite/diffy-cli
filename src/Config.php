@@ -4,7 +4,8 @@ namespace DiffyCli;
 
 use Symfony\Component\Yaml\Yaml;
 
-class Config {
+class Config
+{
 
     /**
      * Save API Key to configuration file.
@@ -12,7 +13,8 @@ class Config {
      * @param $key
      * @throws \Exception
      */
-    static public function saveApiKey($key) {
+    public static function saveApiKey($key)
+    {
         $config = [
             'key' => $key,
         ];
@@ -25,7 +27,8 @@ class Config {
      * @param $config
      * @throws \Exception
      */
-    static public function saveConfig($config) {
+    public static function saveConfig($config)
+    {
         $configPrefix = 'DIFFYCLI';
         $configDirectory = getenv($configPrefix . '_CONFIG') ?: getenv('HOME') . '/.diffy-cli';
 
@@ -50,7 +53,8 @@ class Config {
      * @return mixed
      * @throws \Exception
      */
-    static public function getConfig() {
+    public static function getConfig()
+    {
         $configPrefix = 'DIFFYCLI';
         $configFilePath = getenv($configPrefix . '_CONFIG') ?: getenv('HOME') . '/.diffy-cli/diffy-cli.yaml';
 
@@ -63,6 +67,4 @@ class Config {
         $config = Yaml::parseFile($configFilePath);
         return $config;
     }
-
-
 }
