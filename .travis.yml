@@ -10,9 +10,6 @@ matrix:
   - php: 7.2
     env: DEPENCENCIES=highest
   - php: 7.2
-  - php: 7.1
-  - php: 7.1
-    env: DEPENDENCIES=lowest'
 sudo: false
 cache:
   directories:
