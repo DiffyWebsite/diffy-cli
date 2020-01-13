@@ -7,58 +7,55 @@ Great for building integrations for your CI/CD tools. Allows scription taking sc
 [![Travis CI](https://travis-ci.org/DiffyWebsite/diffy-cli.svg?branch=master)](https://travis-ci.org/DiffyWebsite/diffy-cli)
 [![License](https://img.shields.io/badge/license-MIT-408677.svg)](LICENSE)
 
-### Services
+## Usage
 
-Enable those services shown below that have not already been configured:
+### Installation
 
-| Feature                   | Setup
-| ------------------------- | ----------------
-| Collaborative repository  | [Create GitHub repository](https://github.com/new)
-| Linux permutation testing | [Enable Travis CI](https://travis-ci.org/profile)
-| Windows testing           | [Enable Appveyor CI](https://ci.appveyor.com/projects/new)
-| Static analysis           | [Enable Scrutinizer CI](https://scrutinizer-ci.com/g/new)
-| Code coverage             | [Enable Coveralls](https://coveralls.io/repos/new)
-| Package manager           | [Register with Packagist](https://packagist.org/packages/submit)
-| Dependency updates        | [Enable Dependencies.io](https://app.dependencies.io/add-project)
+Download latest release from [https://github.com/DiffyWebsite/diffy-cli/releases](https://github.com/DiffyWebsite/diffy-cli/releases) page. You can copy file to your executables so it is available everywhere.
 
-### Release Script
-
-To automatically attach a .phar (or some other build result) to every GitHub release:
-
-- Run `travis setup releases` and answer the prompts. Answer "yes" to all yes/no questions.
-- Edit resulting `.travis.yml` file to include the missing `skip_cleanup:` and `tags:` directives.
-
-When you are done, the `deploy:` section should look something like this:
-
-```
-deploy:
-  provider: releases
-  api_key:
-    secure: KmKwmt...[REDACTED]...LlE=
-  file: example.phar
-  skip_cleanup: true
-  on:
-    tags: true
-    repo: DiffyWebsite/diffy-cli
+```shell script
+chmod a+x diffy.phar
+cp diffy.phar /usr/local/bin/diffy
 ```
 
-The `secure:` line should be filled in by `travis setup releases`.
+### Authentication
 
-### Documentation
+You need to obtain a Key to interact with API. This can be done from [Profile](https://app.diffy.website/#/keys).
 
-Once you have finished setting up your project, delete this section and fill out the other sections of this README.
+Once you have a key -- run
+```shell script
+diffy auth:login xxxxxxxxxxxx
+```
 
-Also look over:
+This will save the key for future usages.
 
-- [GitHub issue templates](https://github.com/DiffyWebsite/diffy-cli/issues/templates/edit)
-- [GitHub pull request template](/.github/pull_request_template.md)
-- [Contributing guide](/CONTRIBUTING) (Decide about your code of conduct)
+### Commands
 
-## Getting Started
+```shell script
+diffy screenshot:create PROJECT_ID ENVIRONMENT
+```
 
-Explain how to get a copy of this project up and running on a new user's local machine.
+PROJECT_ID is an ID of the project. You can get it from URL of your project.
+ENVIRONMENT is one of "production", "staging", "development"
 
-See deployment for notes on how to deploy the project on a live system.
+You can use `--wait` key to wait for the screenshot to be completed.
+
+As a result you will get an ID of the screenshot.
+
+
+
+```shell script
+diffy diff:create PROJECT_ID SCREENSHOT_ID1 SCREENSHOT_ID2
+```
+
+Compare screenshots with id SCREENSHOT_ID1 and SCREENSHOT_ID2
+
+### Examples
+
+Take a look at folder with [Examples](https://github.com/DiffyWebsite/diffy-cli/tree/master/examples). This is a collection
+of shell scripts that aim to give you an idea how CLI tool can be used in your CI pipelines.
+
+## Development
 
 ### Prerequisites
 
