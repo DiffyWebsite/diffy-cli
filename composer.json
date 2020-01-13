@@ -20,7 +20,7 @@
     },
     "require": {
         "php": ">=7.1",
-        "consolidation/Robo": "^1.3",
+        "consolidation/robo": "^1.3",
         "diffywebsite/diffy-php": "1.x-dev"
     },
     "require-dev": {
