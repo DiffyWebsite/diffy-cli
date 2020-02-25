@@ -50,6 +50,18 @@ diffy diff:create PROJECT_ID SCREENSHOT_ID1 SCREENSHOT_ID2
 
 Compare screenshots with id SCREENSHOT_ID1 and SCREENSHOT_ID2
 
+```shell script
+diffy project:compare PROJECT_ID production staging
+```
+
+or in case of custom environments
+
+```shell script
+diffy project:compare PROJECT_ID prod custom --env2Url="https://custom.example.com"
+```
+
+Allowed environments are: prod, stage, dev, custom.
+
 ### Examples
 
 Take a look at folder with [Examples](https://github.com/DiffyWebsite/diffy-cli/tree/master/examples). This is a collection

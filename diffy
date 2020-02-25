@@ -30,6 +30,7 @@ $commandClasses = [
   \DiffyCli\Commands\AuthCommand::class,
   \DiffyCli\Commands\DiffCommand::class,
   \DiffyCli\Commands\ScreenshotCommand::class,
+  \DiffyCli\Commands\ProjectCommand::class,
 ];
 $selfUpdateRepository = 'DiffyWebsite/diffy-cli';
 $configPrefix = 'DIFFYCLI';

@@ -22,3 +22,10 @@ SCREENSHOT_ID2=`diffy screenshot:create $DIFFY_PROJECT_ID production`
 # Will receive a notification with results by email / slack.
 DIFF_ID=`diffy diff:create $DIFFY_PROJECT_ID $SCREENSHOT_ID1 $SCREENSHOT_ID2`
 echo "Diff started $DIFF_ID"
+
+# If we just compare two environments.
+diffy project:compare $DIFFY_PROJECT_ID prod stage
+
+# Or maybe we get built environment for Pull Request and we compare it with our UAT.
+CUSTOM_URL="myproject-$PR_NUMBER-environment.platform.sh"
+diffy project:compare $DIFFY_PROJECT_ID prod custom --env2Url=$CUSTOM_URL
