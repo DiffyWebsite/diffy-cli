@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ab39b95ceb180971cc0945dce0fb26a8",
+    "content-hash": "af08b7e7512f8f11e56459731b7c1b58",
     "packages": [
         {
             "name": "consolidation/annotated-command",
@@ -507,16 +507,10 @@
         {
             "name": "diffywebsite/diffy-php",
             "version": "dev-master",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/DiffyWebsite/diffy-php.git",
-                "reference": "03dad3505b4c1ea2195c1f54cbea7d641dea2ccf"
-            },
             "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/DiffyWebsite/diffy-php/zipball/03dad3505b4c1ea2195c1f54cbea7d641dea2ccf",
-                "reference": "03dad3505b4c1ea2195c1f54cbea7d641dea2ccf",
-                "shasum": ""
+                "type": "path",
+                "url": "../diffy-php",
+                "reference": "03dad3505b4c1ea2195c1f54cbea7d641dea2ccf"
             },
             "require": {
                 "guzzlehttp/guzzle": "^6.2",
@@ -533,7 +527,6 @@
                     "Diffy\\": "src/"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -545,7 +538,9 @@
                 "diffy-php",
                 "drupal"
             ],
-            "time": "2020-02-25T02:58:47+00:00"
+            "transport-options": {
+                "symlink": true
+            }
         },
         {
             "name": "grasmash/expander",
@@ -4200,5 +4195,6 @@
     "platform-dev": [],
     "platform-overrides": {
         "php": "7.1.13"
-    }
+    },
+    "plugin-api-version": "1.1.0"
 }
