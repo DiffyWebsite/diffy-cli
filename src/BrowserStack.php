@@ -16,9 +16,91 @@ class BrowserStack
     {
         $this->username = $username;
         $this->password = $password;
+        $this->waitTime = 10; // seconds.
+        $this->quality = 'original';
+    }
+
+    /**
+     * Get available browsers list.
+     *
+     * @return mixed
+     */
+    public function getBrowsers()
+    {
+        return $this->query('browsers', '', true, 'GET');
+    }
+
+    /**
+     * Create screenshot job.
+     *
+     * @param $url
+     * @param array $browsers
+     * @return mixed
+     */
+    public function createScreenshot($url, array $browsers)
+    {
+        $browserStackBrowsers = [];
+        foreach ($browsers as list($browser, $browser_version, $os, $os_version)) {
+            $browserStackBrowsers[] = [
+                'browser' => $browser,
+                'browser_version' => $browser_version,
+                'os' => $os,
+                'os_version' => $os_version,
+                'device' => null,
+                'real_mobile' => null,
+                'wait_time' => $this->waitTime,
+                'quality' => $this->quality,
+            ];
+        }
+
+        $params = [
+            'browsers' => $browserStackBrowsers,
+            'url' => $url,
+        ];
+
+        return $this->query('', json_encode($params), true, 'POST');
     }
 
 
+    /**
+     * Get job results: list of screenshots.
+     *
+     * @param $jobId
+     * @return array
+     * @throws \Exception
+     */
+    public function getListOfScreenshots($jobId)
+    {
+        $result = $this->query($jobId, '', true, 'GET');
+
+        if (!isset($result['state'])) {
+            throw new \Exception('Bad response: '.var_export($result, true));
+        }
+
+        switch ($result['state']) {
+            case 'queue':
+            case 'queued_all':
+                return ['status' => false, 'data' => $result];
+                break;
+
+            case 'done':
+                return ['status' => true, 'data' => $result];
+                break;
+            default:
+                throw new \Exception('Undefined state: '.$result['state']);
+        }
+    }
+
+    /**
+     * Run query to BrowserStack server.
+     *
+     * @param $methodName
+     * @param $request
+     * @param $authRequired
+     * @param $requestVerb
+     * @param bool $isAutomate
+     * @return mixed
+     */
     public function query($methodName, $request, $authRequired, $requestVerb, $isAutomate = false)
     {
         if ($isAutomate) {
@@ -65,99 +147,8 @@ class BrowserStack
                 break;
         }
         $response = curl_exec($ch);
-
         curl_close($ch);
 
         return json_decode($response, true);
-    }
-
-    public function getBrowsers()
-    {
-        return $this->query('browsers', '', true, 'GET');
-    }
-
-    public function createScreenshot($url, array $browsers)
-    {
-        $browserStackBrowsers = [];
-        foreach ($browsers as list($browser, $browser_version, $os, $os_version)) {
-            $browserStackBrowsers[] = [
-                'browser' => $browser,
-                'browser_version' => $browser_version,
-                'os' => $os,
-                'os_version' => $os_version,
-                'device' => null,
-                'real_mobile' => null,
-                'wait_time' => 10,
-                'quality' => 'original',
-            ];
-        }
-
-        $params = [
-            'browsers' => $browserStackBrowsers,
-            'url' => $url,
-        ];
-
-        return $this->query('', json_encode($params), true, 'POST');
-    }
-
-    public function createScreenshotSingleBrowser($url, $os = 'Windows', $os_version = 'XP', $browser = 'chrome', $browser_version = '21.0', $device = null, $real_mobile = null)
-    {
-        if ($this->validateBrowser($os, $os_version, $browser, $browser_version, $device, $real_mobile)) {
-            $selectedBrowser = [
-                'os' => $os,
-                'os_version' => $os_version,
-                'browser' => $browser,
-                'browser_version' => $browser_version,
-                'device' => $device,
-                'real_mobile' => $real_mobile,
-                'wait_time' => 10,
-            ];
-
-            $params = [
-                'browsers' => [$selectedBrowser],
-                'url' => $url,
-            ];
-
-            $result = $this->query('', json_encode($params), true, 'POST');
-
-            //$jobId = $result['job_id'];
-
-            return $result;
-            //var_dump($result);
-        } else {
-            throw new Exception("Wrong browser params");
-        }
-    }
-
-
-    public function getListOfScreenshots($jobId)
-    {
-        $result = $this->query($jobId, '', true, 'GET');
-
-        print $result['state'].PHP_EOL;
-
-        if (isset($result['state']) && $result['state'] == 'done') { // processing
-            return ['status' => true, 'data' => $result];
-        } else {
-            return ['status' => false, 'data' => $result];
-        }
-    }
-
-    private function validateBrowser($os, $os_version, $browser, $browser_version, $device, $real_mobile)
-    {
-        $browsers = $this->getBrowsers();
-        $valid = false;
-
-        $selectedBrowser = ['os' => $os, 'os_version' => $os_version, 'browser' => $browser, 'browser_version' => $browser_version, 'device' => $device, 'real_mobile' => $real_mobile];
-
-        foreach ($browsers as $browser) {
-            $exact = array_diff($selectedBrowser, $browser);
-            if ($exact) {
-                $valid = true;
-                break;
-            }
-        }
-
-        return $valid;
     }
 }

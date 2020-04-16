@@ -2,9 +2,8 @@
 
 namespace DiffyCli\Commands;
 
-use Diffy\Diff;
+use Diffy\Screenshot;
 use Diffy\Diffy;
-use Diffy\InvalidArgumentsException;
 use Diffy\Project;
 use DiffyCli\Config;
 use DiffyCli\BrowserStack;
@@ -26,120 +25,12 @@ class BrowserStackCommand extends \Robo\Tasks
         $password = 'bfsqmbvQQBkLCYfgzzwY';
 
         $this->browserStack = new BrowserStack($username, $password);
+        $this->waitScreenshotsInterval = 10; // Seconds
     }
 
-
     /**
-     * @command diffy:browserstack-screenshot
+     * Get browserstack browsers key list.
      *
-     * @param int $projectId ID of the project
-     * @param string $baseUrl Site base url
-     * @param string $browserStackKeys BrowserStack keys (safari--6.0--OS__X--Lion,firefox--39.0--Windows--8)
-     */
-    public function browserstackScreenshot(int $projectId, string $baseUrl, string $browserStackKeys)
-    {
-        $browserStackKeys = explode(',', $browserStackKeys);
-        $this->io()->writeln($projectId);
-        $this->io()->writeln($baseUrl);
-
-        foreach ($browserStackKeys as $key) {
-            $this->io()->writeln($key);
-        }
-
-
-        $apiKey = Config::getConfig()['key'];
-        Diffy::setApiKey($apiKey);
-        $project = Project::get($projectId);
-
-        $urls = $project['urls'];
-        $production = rtrim($project['production'], '/');
-        $name = $project['name'];
-        $authenticate = $project['authenticate'];
-
-        $baseUrl = rtrim($baseUrl, '/');
-        $urls = array_map(
-            function ($url) use ($baseUrl, $production) {
-                return str_replace($production, $baseUrl, $url);
-            },
-            $urls
-        );
-
-        var_export($urls);
-
-        // Start screenshots.
-        $screenshotResults = [];
-
-        $browsers = [];
-        foreach ($browserStackKeys as $key) {
-            //list($browser, $browser_version, $os, $os_version) = $this->getBrowserStackParams($key);
-            $browsers[] = $this->getBrowserStackParams($key);
-        }
-
-        foreach ($urls as $url) {
-            $item = $this->browserStack->createScreenshot($url, $browsers);
-
-            if (isset($item['job_id'])) {
-                // Get screenshot results
-                $result = $this->awaitScreenshotResult($item['job_id']);
-                //var_export($result);
-                $win_res = $result['win_res'];
-                foreach ($result['screenshots'] as $key => $value) {
-                    $imageUrl = $value['image_url'];
-                    $browserStackKey = $this->prepareBrowserStackKey($value, true);
-                    $screenshotResults[] = [
-                        'key' => $browserStackKey,
-                        'imageUrl' => $imageUrl,
-                        'breakpoint' => getimagesize($imageUrl)[0],
-                    ];
-                }
-            } else {
-                $errors = [];
-                if (isset($item['message'])) {
-                    $errors[] = $item['message'];
-                }
-                if (isset($item['errors'])) {
-                    if (is_array($item['errors'])) {
-                        foreach ($item['errors'] as $error) {
-                            $errors[] = var_export($error, true);
-                        }
-                    }
-                }
-
-                if (empty($errors)) {
-                    $errors = var_export($item, true);
-                }
-                $this->io()->error($errors);
-            }
-        }
-        var_export($screenshotResults);
-    }
-
-    private function awaitScreenshotResult($screenshotJobId)
-    {
-
-        $item = $this->browserStack->getListOfScreenshots($screenshotJobId);
-        if ($item['status']) {
-            return $item['data'];
-        } else {
-            print "Next call: ID".$screenshotJobId.PHP_EOL;
-            sleep(5);
-
-            return $this->awaitScreenshotResult($screenshotJobId);
-        }
-    }
-
-    private function getBrowserStackParams($browserStackKey)
-    {
-        // firefox--37.0--OS__X--High__Sierra
-        $params = explode("--", $browserStackKey);
-        foreach ($params as &$param) {
-            $param = str_replace('__', ' ', $param);
-        }
-
-        return $params;
-    }
-
-    /**
      * @command diffy:browserstack-list
      */
     public function browserKeysList()
@@ -165,8 +56,164 @@ class BrowserStackCommand extends \Robo\Tasks
         $this->io()->table($headers, $rows);
     }
 
+
     /**
-     * Create browser key.
+     * Create screenshots via browserstack and upload them to Diffy.
+     *
+     * @command diffy:browserstack-screenshot
+     *
+     * @param int $projectId ID of the project
+     * @param string $baseUrl Site base url
+     * @param string $browserStackKeys BrowserStack keys: (safari--6.0--OS__X--Lion,firefox--39.0--Windows--8)
+     * @throws \Exception
+     */
+    public function browserStackScreenshot(int $projectId, string $baseUrl, string $browserStackKeys)
+    {
+        $this->io()->title('Starting...');
+        $browserStackKeys = explode(',', $browserStackKeys);
+        $this->io()->writeln("Diffy project ID: $projectId");
+        $this->io()->writeln("Base url: $baseUrl");
+
+        $this->io()->writeln("BrowserStackKeys:");
+        foreach ($browserStackKeys as $key) {
+            $this->io()->writeln("  $key");
+        }
+
+        $apiKey = Config::getConfig()['key'];
+        Diffy::setApiKey($apiKey);
+        $project = Project::get($projectId);
+
+        $urls = $project['urls'];
+        $production = rtrim($project['production'], '/');
+
+        $baseUrl = rtrim($baseUrl, '/');
+        $urls = array_map(
+            function ($url) use ($baseUrl, $production) {
+                return str_replace($production, $baseUrl, $url);
+            },
+            $urls
+        );
+
+        $this->io()->newLine();
+        $this->io()->title("Start processing ".count($urls) ." URLs");
+        // Start screenshots.
+        $screenshotResults = [];
+
+        $browsers = [];
+        foreach ($browserStackKeys as $key) {
+            $browsers[] = $this->getBrowserStackParams($key);
+        }
+
+
+        // Init progress bar.
+        $progress = $this->io()->createProgressBar(count($urls));
+        $progress->setFormat("%message%\n %current%/%max% [%bar%] %percent:3s%%");
+
+        foreach ($urls as $i => $url) {
+            $progress->setMessage("Processing screenshot: $url");
+            $progress->setProgress($i);
+            $item = $this->browserStack->createScreenshot($url, $browsers);
+
+            if (isset($item['job_id'])) {
+                // Get screenshot results
+                $result = $this->awaitScreenshotResult($item['job_id'], $progress);
+                $progress->setProgress($i+1);
+                foreach ($result['screenshots'] as $key => $value) {
+                    $imageUrl = $value['image_url'];
+                    $browserStackKey = $this->prepareBrowserStackKey($value, true);
+                    $uri = str_replace($baseUrl, '', $url);
+                    $uri = '/'.ltrim($uri, '/');
+
+                    $screenshotResults[] = [
+                        'key' => $browserStackKey,
+                        'imageUrl' => $imageUrl,
+                        'breakpoint' => getimagesize($imageUrl)[0],
+                        'url' => $url,
+                        'uri' => $uri,
+                    ];
+                }
+            } else {
+                $errors = [];
+                if (isset($item['message'])) {
+                    $errors[] = $item['message'];
+                }
+                if (isset($item['errors'])) {
+                    if (is_array($item['errors'])) {
+                        foreach ($item['errors'] as $error) {
+                            $errors[] = var_export($error, true);
+                        }
+                    }
+                }
+
+                if (empty($errors)) {
+                    $errors = var_export($item, true);
+                }
+                $this->io()->error($errors);
+            }
+        }
+
+        $progress->finish();
+
+        $this->io()->newLine();
+        $this->io()->title('Screenshots have been created successfully');
+        $headers = ['browserStackKey', 'imageUrl', 'breakpoint', 'url', 'uri'];
+        $this->io()->table($headers, $screenshotResults);
+
+
+        $this->io()->title('Start uploading data to Diffy.');
+        $screenshotId = Screenshot::createBrowserStackScreenshot($projectId, $screenshotResults);
+        $screenshotLink = rtrim(Diffy::$uiBaseUrl, '/') . '/snapshots/' . $screenshotId;
+        $this->io()->success("Screenshot was successfully created. Screenshot: " . $screenshotLink);
+    }
+
+
+    /**
+     * Getting screenshot results from BrowserStack.
+     *
+     * @param $screenshotJobId
+     * @param $progress
+     * @param int $counter
+     * @return mixed
+     * @throws \Exception
+     */
+    private function awaitScreenshotResult($screenshotJobId, $progress, $counter = 0)
+    {
+        $item = $this->browserStack->getListOfScreenshots($screenshotJobId);
+        if ($item['status']) {
+            return $item['data'];
+        } else {
+            $counter++;
+            $message = "Waiting for screenshot job: $screenshotJobId ";
+            for ($i=0; $i<=$counter; $i++) {
+                $message .= '.';
+            }
+            $progress->setMessage($message);
+            $progress->display();
+            sleep($this->waitScreenshotsInterval);
+
+            return $this->awaitScreenshotResult($screenshotJobId, $progress, $counter);
+        }
+    }
+
+    /**
+     * Get browserstack query params from browserstack key.
+     *
+     * @param $browserStackKey
+     * @return array
+     */
+    private function getBrowserStackParams($browserStackKey)
+    {
+        $params = explode("--", $browserStackKey);
+        foreach ($params as &$param) {
+            $param = str_replace('__', ' ', $param);
+        }
+
+        return $params;
+    }
+
+
+    /**
+     * Create browserstack key from browserstack browser params.
      *
      * @param $browser
      * @param bool $onlyKey
