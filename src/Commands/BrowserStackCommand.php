@@ -19,6 +19,9 @@ use Exception;
 class BrowserStackCommand extends \Robo\Tasks
 {
 
+    /**
+     * @var $browserStack BrowserStack
+     */
     private $browserStack;
 
     private $waitScreenshotsInterval = 5; // Seconds
@@ -96,9 +99,9 @@ class BrowserStackCommand extends \Robo\Tasks
         array $options = ['wait' => 5]
     ) {
 
-        $this->waitScreenshotsInterval = (int)$options['wait'];
+        $waitTime = (int)$options['wait'];
 
-        if (!in_array($this->waitScreenshotsInterval, $this->browserStackWaitValues)) {
+        if (!in_array($waitTime, $this->browserStackWaitValues)) {
             throw new Exception('--wait option should be one of '.implode(', ', $this->browserStackWaitValues));
         }
 
@@ -145,9 +148,9 @@ class BrowserStackCommand extends \Robo\Tasks
         foreach ($urls as $i => $url) {
             $progress->setMessage("Processing screenshot: $url");
             $progress->setProgress($i);
-            $item = $this->browserStack->createScreenshot($url, $browsers);
+            $item = $this->browserStack->createScreenshot($url, $browsers, $waitTime);
 
-            if (isset($item['job_id'])) {
+            if ($item && isset($item['job_id'])) {
                 // Get screenshot results
                 $result = $this->awaitScreenshotResult($item['job_id'], $progress);
                 $progress->setProgress($i + 1);
@@ -182,6 +185,7 @@ class BrowserStackCommand extends \Robo\Tasks
                     $errors = var_export($item, true);
                 }
                 $this->io()->error($errors);
+                throw new Exception('Can\'t start job.');
             }
         }
 
