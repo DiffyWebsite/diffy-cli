@@ -2,11 +2,13 @@
 
 namespace DiffyCli\Commands;
 
+use Diffy\InvalidArgumentsException;
 use Diffy\Screenshot;
 use Diffy\Diffy;
 use Diffy\Project;
 use DiffyCli\Config;
 use DiffyCli\BrowserStack;
+use Exception;
 
 /**
  *
@@ -19,22 +21,37 @@ class BrowserStackCommand extends \Robo\Tasks
 
     private $browserStack;
 
-    public function __construct()
-    {
-        $username = 'sergeygrigorenko1';
-        $password = 'bfsqmbvQQBkLCYfgzzwY';
+    private $waitScreenshotsInterval = 5; // Seconds
 
-        $this->browserStack = new BrowserStack($username, $password);
-        $this->waitScreenshotsInterval = 10; // Seconds
+    private $browserStackWaitValues = [2, 5, 10, 15, 20, 60];
+
+    /**
+     * Save Browserstack credentials.
+     *
+     * @command browserstack:save-credentials
+     *
+     * @param string $username You Browserstack username. . Obtain your username at https://www.browserstack.com/accounts/settings
+     * @param string $accessKey Your Browserstack Access Key. Obtain your key at https://www.browserstack.com/accounts/settings
+     *
+     * @usage browserstack:save-credentials <username> <access_key> Saves the username <username> and access Key <access_key> to configuration for future use.
+     * @throws Exception
+     */
+    public function saveBrowserStackCredentials($username, $accessKey)
+    {
+        Config::saveBrowserstackCredentials($username, $accessKey);
+        $this->io()->success("Browserstack username and access key saved");
     }
 
     /**
      * Get browserstack browsers key list.
      *
-     * @command diffy:browserstack-list
+     * @command browserstack:browsers-list
+     *
+     * @usage browserstack:browsers-list Shows available browsers and browser keys.
      */
     public function browserKeysList()
     {
+        $this->login();
         $browsers = $this->browserStack->getBrowsers();
         $headers = ['browser', 'browser version', 'os', 'os version', 'browser key'];
         $rows = [];
@@ -60,15 +77,32 @@ class BrowserStackCommand extends \Robo\Tasks
     /**
      * Create screenshots via browserstack and upload them to Diffy.
      *
-     * @command diffy:browserstack-screenshot
+     * @command browserstack:screenshot
      *
      * @param int $projectId ID of the project
      * @param string $baseUrl Site base url
      * @param string $browserStackKeys BrowserStack keys: (safari--6.0--OS__X--Lion,firefox--39.0--Windows--8)
-     * @throws \Exception
+     * @param array $options
+     *
+     * @throws InvalidArgumentsException
+     *
+     * @usage browserstack:screenshot 1194 http://site.com firefox--39.0--Windows--8 Create screenshot for project with ID 1194, base url http://site.com and one browser firefox--39.0--Windows--8.
+     * @usage browserstack:screenshot --wait=10 1194 http://site.com safari--6.0--OS__X--Lion,firefox--39.0--Windows--8 Create screenshot for project with ID 1194, base url http://site.com and two browsers firefox--39.0--Windows--8 and safari--6.0--OS__X--Lion with delay bofore screenshot 10 seconds.
      */
-    public function browserStackScreenshot(int $projectId, string $baseUrl, string $browserStackKeys)
-    {
+    public function browserStackScreenshot(
+        int $projectId,
+        string $baseUrl,
+        string $browserStackKeys,
+        array $options = ['wait' => 5]
+    ) {
+
+        $this->waitScreenshotsInterval = (int)$options['wait'];
+
+        if (!in_array($this->waitScreenshotsInterval, $this->browserStackWaitValues)) {
+            throw new Exception('--wait option should be one of '.implode(', ', $this->browserStackWaitValues));
+        }
+
+        $this->login();
         $this->io()->title('Starting...');
         $browserStackKeys = explode(',', $browserStackKeys);
         $this->io()->writeln("Diffy project ID: $projectId");
@@ -95,7 +129,7 @@ class BrowserStackCommand extends \Robo\Tasks
         );
 
         $this->io()->newLine();
-        $this->io()->title("Start processing ".count($urls) ." URLs");
+        $this->io()->title("Start processing ".count($urls)." URLs");
         // Start screenshots.
         $screenshotResults = [];
 
@@ -103,7 +137,6 @@ class BrowserStackCommand extends \Robo\Tasks
         foreach ($browserStackKeys as $key) {
             $browsers[] = $this->getBrowserStackParams($key);
         }
-
 
         // Init progress bar.
         $progress = $this->io()->createProgressBar(count($urls));
@@ -117,7 +150,7 @@ class BrowserStackCommand extends \Robo\Tasks
             if (isset($item['job_id'])) {
                 // Get screenshot results
                 $result = $this->awaitScreenshotResult($item['job_id'], $progress);
-                $progress->setProgress($i+1);
+                $progress->setProgress($i + 1);
                 foreach ($result['screenshots'] as $key => $value) {
                     $imageUrl = $value['image_url'];
                     $browserStackKey = $this->prepareBrowserStackKey($value, true);
@@ -159,13 +192,28 @@ class BrowserStackCommand extends \Robo\Tasks
         $headers = ['browserStackKey', 'imageUrl', 'breakpoint', 'url', 'uri'];
         $this->io()->table($headers, $screenshotResults);
 
-
         $this->io()->title('Start uploading data to Diffy.');
         $screenshotId = Screenshot::createBrowserStackScreenshot($projectId, $screenshotResults);
-        $screenshotLink = rtrim(Diffy::$uiBaseUrl, '/') . '/snapshots/' . $screenshotId;
-        $this->io()->success("Screenshot was successfully created. Screenshot: " . $screenshotLink);
+        $screenshotLink = rtrim(Diffy::$uiBaseUrl, '/').'/snapshots/'.$screenshotId;
+        $this->io()->success("Screenshot was successfully created. Screenshot: ".$screenshotLink);
     }
 
+    /**
+     * Login to browserstack.
+     *
+     * @throws Exception
+     */
+    private function login()
+    {
+        $config = Config::getConfig();
+
+        if (!isset($config['browserStackUsername']) || !isset($config['browserStackAccessKey']) ||
+            empty($config['browserStackUsername']) || empty($config['browserStackAccessKey'])) {
+            throw new Exception('Browserstack credentials are empty. Use command diffy `browserstack:save-credentials <username> <access_token>` for add credentials.');
+        }
+
+        $this->browserStack = new BrowserStack($config['browserStackUsername'], $config['browserStackAccessKey']);
+    }
 
     /**
      * Getting screenshot results from BrowserStack.
@@ -174,7 +222,7 @@ class BrowserStackCommand extends \Robo\Tasks
      * @param $progress
      * @param int $counter
      * @return mixed
-     * @throws \Exception
+     * @throws Exception
      */
     private function awaitScreenshotResult($screenshotJobId, $progress, $counter = 0)
     {
@@ -184,7 +232,7 @@ class BrowserStackCommand extends \Robo\Tasks
         } else {
             $counter++;
             $message = "Waiting for screenshot job: $screenshotJobId ";
-            for ($i=0; $i<=$counter; $i++) {
+            for ($i = 0; $i <= $counter; $i++) {
                 $message .= '.';
             }
             $progress->setMessage($message);

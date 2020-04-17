@@ -15,9 +15,23 @@ class Config
      */
     public static function saveApiKey($key)
     {
-        $config = [
-            'key' => $key,
-        ];
+        $config = self::getConfig();
+        $config['key'] = $key;
+        self::saveConfig($config);
+    }
+
+    /**
+     * Save Browserstack credentials.
+     *
+     * @param $username
+     * @param $accessKey
+     * @throws \Exception
+     */
+    public static function saveBrowserstackCredentials($username, $accessKey)
+    {
+        $config = self::getConfig();
+        $config['browserStackUsername'] = $username;
+        $config['browserStackAccessKey'] = $accessKey;
         self::saveConfig($config);
     }
 
