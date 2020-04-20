@@ -75,7 +75,7 @@ class DiffCommand extends \Robo\Tasks
         Diffy::setApiKey($apiKey);
         $diff = Diff::retrieve($diffId);
 
-        return (int) $diff->isCompleted();
+        $this->io()->write($diff->isCompleted());
     }
 
     /**
@@ -95,6 +95,6 @@ class DiffCommand extends \Robo\Tasks
         Diffy::setApiKey($apiKey);
         $diff = Diff::retrieve($diffId);
 
-        return $diff->getChangesPercentage();
+        $this->io()->write($diff->getChangesPercentage());
     }
 }
