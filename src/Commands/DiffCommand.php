@@ -75,7 +75,7 @@ class DiffCommand extends \Robo\Tasks
         Diffy::setApiKey($apiKey);
         $diff = Diff::retrieve($diffId);
 
-        return $diff->isCompleted();
+        return (int) $diff->isCompleted();
     }
 
     /**
