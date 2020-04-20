@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ab39b95ceb180971cc0945dce0fb26a8",
+    "content-hash": "00473161de893575cc7f7c7ccc649d65",
     "packages": [
         {
             "name": "consolidation/annotated-command",
@@ -510,12 +510,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/DiffyWebsite/diffy-php.git",
-                "reference": "03dad3505b4c1ea2195c1f54cbea7d641dea2ccf"
+                "reference": "5cfb53f797c91d1827ee7452f97311821f61ef59"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/DiffyWebsite/diffy-php/zipball/03dad3505b4c1ea2195c1f54cbea7d641dea2ccf",
-                "reference": "03dad3505b4c1ea2195c1f54cbea7d641dea2ccf",
+                "url": "https://api.github.com/repos/DiffyWebsite/diffy-php/zipball/5cfb53f797c91d1827ee7452f97311821f61ef59",
+                "reference": "5cfb53f797c91d1827ee7452f97311821f61ef59",
                 "shasum": ""
             },
             "require": {
@@ -545,7 +545,7 @@
                 "diffy-php",
                 "drupal"
             ],
-            "time": "2020-02-25T02:58:47+00:00"
+            "time": "2020-04-17T12:01:40+00:00"
         },
         {
             "name": "grasmash/expander",
@@ -4200,5 +4200,6 @@
     "platform-dev": [],
     "platform-overrides": {
         "php": "7.1.13"
-    }
+    },
+    "plugin-api-version": "1.1.0"
 }

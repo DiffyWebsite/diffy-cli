@@ -4,6 +4,7 @@ namespace DiffyCli\Commands;
 
 use Diffy\Diff;
 use Diffy\Diffy;
+use Diffy\InvalidArgumentsException;
 use DiffyCli\Config;
 
 class DiffCommand extends \Robo\Tasks
@@ -18,7 +19,7 @@ class DiffCommand extends \Robo\Tasks
      * @param int $screenshotId2 ID of the second screenshot to compare
      *
      * @param array $options
-     * @throws \Diffy\InvalidArgumentsException
+     * @throws InvalidArgumentsException
      * @option wait Wait for the diff to be completed
      * @option max-wait Maximum number of seconds to wait for the diff to be completed.
      *
