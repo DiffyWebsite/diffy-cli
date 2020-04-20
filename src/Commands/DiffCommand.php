@@ -44,7 +44,7 @@ class DiffCommand extends \Robo\Tasks
             $i = 0;
             $diff = Diff::retrieve($diffId);
             while ($i < $max_wait / $sleep) {
-                if ($diff->isCompleted()) {
+                if ($diff->isCompleted() || $diff->isFailed()) {
                     break;
                 }
                 sleep($sleep);
@@ -55,5 +55,46 @@ class DiffCommand extends \Robo\Tasks
         }
 
         $this->io()->write($diffId);
+    }
+
+    /**
+     * Get diff status.
+     *
+     * @command diff:get-status
+     *
+     * @param int $diffId
+     *
+     * @return mixed
+     * @throws \Exception
+     *
+     * @usage diff:get-status 12345 Get diff status.
+     */
+    public function getDiffStatus(int $diffId)
+    {
+        $apiKey = Config::getConfig()['key'];
+        Diffy::setApiKey($apiKey);
+        $diff = Diff::retrieve($diffId);
+
+        return $diff->isCompleted();
+    }
+
+    /**
+     * Get diff status.
+     *
+     * @command diff:get-changes-percent
+     *
+     * @param int $diffId
+     *
+     * @return mixed
+     * @throws \Exception
+     * @usage diff:get-changes-percent 12345 Get diff changes percent.
+     */
+    public function getDiffPercent(int $diffId)
+    {
+        $apiKey = Config::getConfig()['key'];
+        Diffy::setApiKey($apiKey);
+        $diff = Diff::retrieve($diffId);
+
+        return $diff->getChangesPercentage();
     }
 }
