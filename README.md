@@ -42,8 +42,6 @@ You can use `--wait` key to wait for the screenshot to be completed.
 
 As a result you will get an ID of the screenshot.
 
-
-
 ```shell script
 diffy diff:create PROJECT_ID SCREENSHOT_ID1 SCREENSHOT_ID2
 ```
@@ -61,6 +59,27 @@ diffy project:compare PROJECT_ID prod custom --env2Url="https://custom.example.c
 ```
 
 Allowed environments are: prod, stage, dev, custom.
+
+### BrowserStack integration
+
+If you have Automate Pro plan or higher we can use Screenshot API to generate screenshots and send them to Diffy.
+
+For that you need following steps.
+
+Save credentials. They can be obtained at [account setting page](https://www.browserstack.com/accounts/settings).
+```shell script
+php diffy browserstack:save-credentials <username> <access_key>
+```
+
+Get a list of all possible browsers available to choose which ones you would like to use.
+```shell script
+php diffy browserstack:browsers-list
+```
+
+Run process of taking screenshots
+```shell script
+php diffy browserstack:screenshot PROJECT_ID http://url-of-the-site.com safari--6.0--OS__X--Lion,firefox--39.0--Windows--8 --wait=10
+```
 
 ### Examples
 
