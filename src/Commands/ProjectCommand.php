@@ -24,6 +24,7 @@ class ProjectCommand extends \Robo\Tasks
      * @option env2Url Url of the second environment if custom environment
      * @option wait Wait for the diff to be completed
      * @option max-wait Maximum number of seconds to wait for the diff to be completed.
+     * @option sha Github commit SHA.
      *
      * @usage project:compare 342 prod stage
      *   Compare production and stage environments.
@@ -34,7 +35,7 @@ class ProjectCommand extends \Robo\Tasks
         int $projectId,
         string $env1,
         string $env2,
-        array $options = ['wait' => false, 'max-wait' => 1200, 'env1Url' => '', 'env2Url' => '']
+        array $options = ['wait' => false, 'max-wait' => 1200, 'env1Url' => '', 'env2Url' => '', 'sha' => false]
     ) {
         $apiKey = Config::getConfig()['key'];
 
@@ -44,6 +45,10 @@ class ProjectCommand extends \Robo\Tasks
             'env1Url' => $options['env1Url'],
             'env2Url' => $options['env2Url'],
         ];
+
+        if (!empty($options['sha']) && $options['sha']) {
+            $params['commitSha'] = $options['sha'];
+        }
 
         Diffy::setApiKey($apiKey);
         $diffId = Project::compare($projectId, $params);
