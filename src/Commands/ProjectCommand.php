@@ -24,17 +24,20 @@ class ProjectCommand extends \Robo\Tasks
      * @option env2Url Url of the second environment if custom environment
      * @option wait Wait for the diff to be completed
      * @option max-wait Maximum number of seconds to wait for the diff to be completed.
+     * @option commit-sha Github commit SHA.
      *
      * @usage project:compare 342 prod stage
      *   Compare production and stage environments.
      * @usage project:compare --wait 342 prod custom --env2Url="https://custom-environment.example.com"
      *   Compare production environment with https://custom-environment.example.com.
+     * @usage project:compare custom custom --env1Url="http://site.com" --env2Url="http://site2.com" --commit-sha="29b872765b21387b7adfd67fd16b7f11942e1a56"
+     *   Compare http://site.com withhttp://site2.com with github check by commit-sha.
      */
     public function createCompare(
         int $projectId,
         string $env1,
         string $env2,
-        array $options = ['wait' => false, 'max-wait' => 1200, 'env1Url' => '', 'env2Url' => '']
+        array $options = ['wait' => false, 'max-wait' => 1200, 'env1Url' => '', 'env2Url' => '', 'commit-sha' => null]
     ) {
         $apiKey = Config::getConfig()['key'];
 
@@ -44,6 +47,10 @@ class ProjectCommand extends \Robo\Tasks
             'env1Url' => $options['env1Url'],
             'env2Url' => $options['env2Url'],
         ];
+
+        if (!empty($options['commit-sha']) && $options['commit-sha']) {
+            $params['commitSha'] = $options['commit-sha'];
+        }
 
         Diffy::setApiKey($apiKey);
         $diffId = Project::compare($projectId, $params);
