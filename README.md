@@ -60,6 +60,16 @@ diffy project:compare PROJECT_ID prod custom --env2Url="https://custom.example.c
 
 Allowed environments are: prod, stage, dev, custom.
 
+### Github integration
+
+Main documentation page http://diffy.website/documentation/github-integration
+
+The only difference you will need to have is to pass commit sha to compare operation:
+
+```shell script
+diffy project:compare PROJECT_ID prod custom --env2Url="https://custom.example.com" --commit-sha="29b872765b21387b7adfd67fd16b7f11942e1a56"
+```
+
 ### BrowserStack integration
 
 If you have Automate Pro plan or higher we can use Screenshot API to generate screenshots and send them to Diffy.
