@@ -510,12 +510,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/DiffyWebsite/diffy-php.git",
-                "reference": "d193c8ee4112c7d93c3106ec1d0806b9454eee61"
+                "reference": "448004d091fd11c20091b366770874134d02956f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/DiffyWebsite/diffy-php/zipball/d193c8ee4112c7d93c3106ec1d0806b9454eee61",
-                "reference": "d193c8ee4112c7d93c3106ec1d0806b9454eee61",
+                "url": "https://api.github.com/repos/DiffyWebsite/diffy-php/zipball/448004d091fd11c20091b366770874134d02956f",
+                "reference": "448004d091fd11c20091b366770874134d02956f",
                 "shasum": ""
             },
             "require": {
@@ -545,7 +545,7 @@
                 "diffy-php",
                 "drupal"
             ],
-            "time": "2020-05-06T16:47:35+00:00"
+            "time": "2020-07-14T11:34:48+00:00"
         },
         {
             "name": "grasmash/expander",

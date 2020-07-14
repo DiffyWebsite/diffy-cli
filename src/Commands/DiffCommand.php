@@ -40,7 +40,7 @@ class DiffCommand extends \Robo\Tasks
 
         if (!empty($options['wait']) && $options['wait'] == true) {
             $sleep = 10;
-            $max_wait = (int) $options['max-wait'];
+            $max_wait = (int)$options['max-wait'];
             sleep($sleep);
             $i = 0;
             $diff = Diff::retrieve($diffId);
@@ -97,5 +97,51 @@ class DiffCommand extends \Robo\Tasks
         $diff = Diff::retrieve($diffId);
 
         $this->io()->write($diff->getChangesPercentage());
+    }
+
+    /**
+     * Get diff status.
+     *
+     * @command diff:get-list
+     *
+     * @param int $projectId
+     * @param int $page
+     *
+     * @return mixed
+     * @throws \Exception
+     * @usage diff:get-list 12345 1 Get diffs list for project (page 1).
+     */
+    public function getDiffs(int $projectId, $page = 0)
+    {
+        $apiKey = Config::getConfig()['key'];
+        Diffy::setApiKey($apiKey);
+        $diffs = Diff::list($projectId, $page);
+
+        $numberItemsOnPage = isset($diffs['numberItemsOnPage']) ? $diffs['numberItemsOnPage'] : 0;
+        $totalPages = isset($diffs['totalPages']) ? $diffs['totalPages'] : 0;
+
+        $headers = ['id', 'changes', 'state', 'jobs', 'estimate', 'sharedUrl'];
+        $results = [];
+
+        if (isset($diffs['diffs']) && !empty($diffs['diffs'])) {
+            foreach ($diffs['diffs'] as $diff) {
+                $results[] = [
+                    'id' => $diff['id'],
+                    'changes' => $diff['changes'],
+                    'state' => Diff::getStateName($diff['state']),
+                    'jobs' => $diff['status']['jobs'],
+                    'estimate' => ($diff['status']['jobs'] > 0) ? $diff['status']['estimate'] : 'Finished',
+                    'sharedUrl' => $diff['sharedUrl'],
+                ];
+            }
+        }
+
+        $this->io()->table($headers, $results);
+
+        $this->io()->definitionList(
+            ['Number items on page' => $numberItemsOnPage],
+            ['Total pages' => $totalPages],
+            ['Current page' => $page]
+        );
     }
 }
