@@ -109,7 +109,7 @@ class DiffCommand extends \Robo\Tasks
      *
      * @return mixed
      * @throws \Exception
-     * @usage diff:get-list 12345 1 Get diffs list for project (page 1).
+     * @usage diff:list 12345 1 Get diffs list for project (page 1).
      */
     public function getDiffs(int $projectId, $page = 0)
     {

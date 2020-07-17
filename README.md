@@ -60,6 +60,15 @@ diffy project:compare PROJECT_ID prod custom --env2Url="https://custom.example.c
 
 Allowed environments are: prod, stage, dev, custom.
 
+
+Get list of diffs
+
+```shell script
+diffy diff:list PROJECT_ID PAGE_NUMBER
+```
+PROJECT_ID is an ID of the project. You can get it from URL of your project.
+PAGE_NUMBER is number of the page results (starts from 0)
+
 ### Github integration
 
 Main documentation page http://diffy.website/documentation/github-integration
