@@ -102,7 +102,7 @@ class DiffCommand extends \Robo\Tasks
     /**
      * Get diff status.
      *
-     * @command diff:get-list
+     * @command diff:list
      *
      * @param int $projectId
      * @param int $page
