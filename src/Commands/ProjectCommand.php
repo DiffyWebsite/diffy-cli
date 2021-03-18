@@ -98,19 +98,18 @@ class ProjectCommand extends \Robo\Tasks
         Diffy::setApiKey($apiKey);
         $configuration = file_get_contents($configurationPath);
 
-        if(!$configuration) {
+        if (!$configuration) {
             $this->io->write(sprintf('Configuration not found on path : %s', $configurationPath));
             throw new InvalidArgumentException();
         }
 
         try {
-            $configuration = json_decode($configuration, TRUE);
+            $configuration = json_decode($configuration, true);
         } catch (InvalidArgumentException $exception) {
             $this->io->write('Configuration is not valid JSON ');
             throw $exception;
         }
 
-        Diffy::request('POST' , '/api/projects/' . $projectId, $configuration);
-
+        Diffy::request('POST', '/api/projects/' . $projectId, $configuration);
     }
 }
