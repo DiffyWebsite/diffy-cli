@@ -60,6 +60,14 @@ diffy project:compare PROJECT_ID prod custom --env2Url="https://custom.example.c
 
 Allowed environments are: prod, stage, dev, custom.
 
+If you want to update your config (For example, from CICD)
+
+```shell script
+diffy project:update PROJECT_ID ./examples/diffy.config.json
+```
+
+See the ./examples/diffy.config.json fule for a valid config file.
+
 
 Get list of diffs
 

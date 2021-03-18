@@ -6,6 +6,8 @@ use Diffy\Diff;
 use Diffy\Diffy;
 use Diffy\Project;
 use DiffyCli\Config;
+use GuzzleHttp\Exception\InvalidArgumentException;
+use function GuzzleHttp\json_decode;
 
 class ProjectCommand extends \Robo\Tasks
 {
@@ -72,6 +74,43 @@ class ProjectCommand extends \Robo\Tasks
             }
         }
 
-        $this->io()->write($diffId);
+        $this->io->write($diffId);
+    }
+
+    /**
+     * Update project configuration
+     *
+     * @command project:update
+     *
+     * @param int $projectId Id of the project.
+     * @param string $configurationPath Path to the json config file.
+     *
+     * @usage project:update 342 ./examples/diffy.config.json
+     *   Updates given project ID with the diffy config.
+     *
+     * @throws \GuzzleHttp\Exception\InvalidArgumentException
+     */
+    public function updateProject(
+        int $projectId,
+        string $configurationPath
+    ) {
+        $apiKey = Config::getConfig()['key'];
+        Diffy::setApiKey($apiKey);
+        $configuration = file_get_contents($configurationPath);
+
+        if(!$configuration) {
+            $this->io->write(sprintf('Configuration not found on path : %s', $configurationPath));
+            throw new InvalidArgumentException();
+        }
+
+        try {
+            $configuration = json_decode($configuration, TRUE);
+        } catch (InvalidArgumentException $exception) {
+            $this->io->write('Configuration is not valid JSON ');
+            throw $exception;
+        }
+
+        Diffy::request('POST' , '/api/projects/' . $projectId, $configuration);
+
     }
 }
