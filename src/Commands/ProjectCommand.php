@@ -74,7 +74,7 @@ class ProjectCommand extends \Robo\Tasks
             }
         }
 
-        $this->io->write($diffId);
+        $this->say($diffId);
     }
 
     /**
@@ -99,14 +99,14 @@ class ProjectCommand extends \Robo\Tasks
         $configuration = file_get_contents($configurationPath);
 
         if (!$configuration) {
-            $this->io->write(sprintf('Configuration not found on path : %s', $configurationPath));
+            $this->say(sprintf('Configuration not found on path : %s', $configurationPath));
             throw new InvalidArgumentException();
         }
 
         try {
             $configuration = json_decode($configuration, true);
         } catch (InvalidArgumentException $exception) {
-            $this->io->write('Configuration is not valid JSON ');
+            $this->say('Configuration is not valid JSON ');
             throw $exception;
         }
 
