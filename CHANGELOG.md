@@ -2,7 +2,7 @@
 
 ### Unreleased
 
-* List pending changes here.
+* Added the diffy project:update command.
 
 ### 0.1.0 - 2020/Jan/10
 

@@ -1,0 +1,16 @@
+{
+  "name" : "Your project name",
+  "breakpoints" : [
+    320, 1024, 1920
+  ],
+  "production" : "https://your-site.com",
+  "staging": "https://user:password@staging.your-site.com",
+  "development": "https://user:password@dev.your-site.com",
+  "urls": [
+    "https://your-site.com/faq",
+    "https://your-site.com/questions",
+    "https://your-site.com/news"
+  ],
+
+  "schedule": "mon:false, tue:false, wed:false, thu:false, fri:false, sat:false, sun:false"
+}

@@ -6,6 +6,9 @@ use Diffy\Diff;
 use Diffy\Diffy;
 use Diffy\Project;
 use DiffyCli\Config;
+use GuzzleHttp\Exception\InvalidArgumentException;
+use Symfony\Component\Console\Style\SymfonyStyle;
+use function GuzzleHttp\json_decode;
 
 class ProjectCommand extends \Robo\Tasks
 {
@@ -39,6 +42,7 @@ class ProjectCommand extends \Robo\Tasks
         string $env2,
         array $options = ['wait' => false, 'max-wait' => 1200, 'env1Url' => '', 'env2Url' => '', 'commit-sha' => null]
     ) {
+        $io = new SymfonyStyle($this->input(), $this->output());
         $apiKey = Config::getConfig()['key'];
 
         $params = [
@@ -72,6 +76,43 @@ class ProjectCommand extends \Robo\Tasks
             }
         }
 
-        $this->io()->write($diffId);
+        $io->write($diffId);
+    }
+
+    /**
+     * Update project configuration
+     *
+     * @command project:update
+     *
+     * @param int $projectId Id of the project.
+     * @param string $configurationPath Path to the json config file.
+     *
+     * @usage project:update 342 ./examples/diffy.config.json
+     *   Updates given project ID with the diffy config.
+     *
+     * @throws \GuzzleHttp\Exception\InvalidArgumentException
+     */
+    public function updateProject(
+        int $projectId,
+        string $configurationPath
+    ) {
+        $io = new SymfonyStyle($this->input(), $this->output());
+        $apiKey = Config::getConfig()['key'];
+        Diffy::setApiKey($apiKey);
+        $configuration = file_get_contents($configurationPath);
+
+        if (!$configuration) {
+            $io->write(sprintf('Configuration not found on path : %s', $configurationPath));
+            throw new InvalidArgumentException();
+        }
+
+        try {
+            $configuration = json_decode($configuration, true);
+        } catch (InvalidArgumentException $exception) {
+            $io->write('Configuration is not valid JSON ');
+            throw $exception;
+        }
+
+        Diffy::request('POST', '/api/projects/' . $projectId, $configuration);
     }
 }
