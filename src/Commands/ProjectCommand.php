@@ -74,7 +74,7 @@ class ProjectCommand extends \Robo\Tasks
             }
         }
 
-        $this->say($diffId);
+        $this->io()->write($diffId);
     }
 
     /**
