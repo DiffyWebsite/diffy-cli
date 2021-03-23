@@ -15,7 +15,7 @@ class Config
      */
     public static function saveApiKey($key)
     {
-        $config = self::getConfig();
+        $config = self::getConfig(FALSE);
         $config['key'] = $key;
         self::saveConfig($config);
     }
@@ -67,18 +67,23 @@ class Config
      * @return mixed
      * @throws \Exception
      */
-    public static function getConfig()
+    public static function getConfig($should_exist = TRUE)
     {
         $configPrefix = 'DIFFYCLI';
         $configFilePath = getenv($configPrefix . '_CONFIG') ?: getenv('HOME') . '/.diffy-cli/diffy-cli.yaml';
 
         if (!file_exists($configFilePath)) {
-            throw new \Exception(
-                'Configuration file "' . $configFilePath . '" does not exist yet. Save your API KEY with "diffy auth:login" command.'
-            );
+            $config = [];
+            if ($should_exist) {
+                throw new \Exception(
+                    'Configuration file "' . $configFilePath . '" does not exist yet. Save your API KEY with "diffy auth:login" command.'
+                );
+            }
+        }
+        else {
+            $config = Yaml::parseFile($configFilePath);
         }
 
-        $config = Yaml::parseFile($configFilePath);
         return $config;
     }
 }
