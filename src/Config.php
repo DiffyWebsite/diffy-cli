@@ -36,6 +36,21 @@ class Config
     }
 
     /**
+     * Save Lambdatest credentials.
+     *
+     * @param $username
+     * @param $accessToken
+     * @throws \Exception
+     */
+    public static function saveLambdatestCredentials($username, $accessToken)
+    {
+        $config = self::getConfig();
+        $config['lambdaTestUsername'] = $username;
+        $config['lambdaTestAccessToken'] = $accessToken;
+        self::saveConfig($config);
+    }
+
+    /**
      * Save configuration file.
      *
      * @param $config
