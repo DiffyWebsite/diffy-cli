@@ -108,6 +108,29 @@ Run process of taking screenshots
 php diffy browserstack:screenshot PROJECT_ID http://url-of-the-site.com safari--6.0--OS__X--Lion,firefox--39.0--Windows--8 --wait=10
 ```
 
+### LambdaTest integration
+
+If you have Live plan or higher we can use Screenshot API to generate screenshots and send them to Diffy.
+
+For that you need following steps.
+
+First you need to save credentials. They can be obtained at [account setting page](https://accounts.lambdatest.com/detail/profile). You need to pass your Username and Access Token.
+```shell script
+php diffy lambdatest:save-credentials <username> <access_token>
+```
+
+Get a list of all possible browsers available to choose which ones you would like to use.
+```shell script
+php diffy lambdatest:browsers-list
+```
+
+Run process of taking screenshots
+```shell script
+php diffy lambdatest:screenshot PROJECT_ID http://url-of-the-site.com  --wait=10 windows__10--opera--75,windows__10--chrome--90
+```
+
+Once the job is completed you can see screenshots set appeared in your project.
+
 ### Examples
 
 Take a look at folder with [Examples](https://github.com/DiffyWebsite/diffy-cli/tree/master/examples). This is a collection
@@ -195,9 +218,3 @@ See also the list of [contributors](https://github.com/DiffyWebsite/diffy-cli/co
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
 
-## Acknowledgments
-
-* Hat tip to anyone who's code was used
-* Inspiration
-* etc
-* Thanks to PurpleBooth for the [example README template](https://gist.github.com/PurpleBooth/109311bb0361f32d87a2)
