@@ -9,13 +9,19 @@ Great for building integrations for your CI/CD tools. Allows scription taking sc
 
 ## Usage
 
-### Installation
+### Manual Installation
 
 Download latest release from [https://github.com/DiffyWebsite/diffy-cli/releases](https://github.com/DiffyWebsite/diffy-cli/releases) page. You can copy file to your executables so it is available everywhere.
 
 ```shell script
 chmod a+x diffy.phar
 cp diffy.phar /usr/local/bin/diffy
+```
+
+### Installion with Composer
+
+```shell script
+composer require diffy-website/diffy-cli --with-all-dependencies
 ```
 
 ### Authentication
