@@ -74,6 +74,11 @@ diffy project:update PROJECT_ID ./examples/diffy.config.json
 
 See the ./examples/diffy.config.json fule for a valid config file.
 
+Get the full settings of the project
+
+```shell script
+diffy project:get PROJECT_ID
+```
 
 Get list of diffs
 

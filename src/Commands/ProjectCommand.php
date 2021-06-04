@@ -115,4 +115,29 @@ class ProjectCommand extends \Robo\Tasks
 
         Diffy::request('POST', '/api/projects/' . $projectId, $configuration);
     }
+
+
+    /**
+     * Get project settings
+     *
+     * @command project:get
+     *
+     * @param int $projectId Id of the project.
+     *
+     * @usage project:get 342
+     *   Gets the settings of the project 342.
+     *
+     * @throws \GuzzleHttp\Exception\InvalidArgumentException
+     */
+    public function getProject(
+        int $projectId
+    ) {
+        $io = new SymfonyStyle($this->input(), $this->output());
+        $apiKey = Config::getConfig()['key'];
+        Diffy::setApiKey($apiKey);
+
+        $project = Project::get($projectId);
+
+        $io->write(json_encode($project));
+    }
 }
