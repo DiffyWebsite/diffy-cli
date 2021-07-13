@@ -11,7 +11,7 @@ Great for building integrations for your CI/CD tools. Allows scription taking sc
 
 ### Manual Installation
 
-Download latest release from [https://github.com/DiffyWebsite/diffy-cli/releases](https://github.com/DiffyWebsite/diffy-cli/releases) page. You can copy file to your executables so it is available everywhere.
+Download latest release from [https://github.com/DiffyWebsite/diffy-cli/releases](https://github.com/DiffyWebsite/diffy-cli/releases) page. Download just diffy.phar file. No need for all the source code. You can copy file to your executables so it is available everywhere.
 
 ```shell script
 chmod a+x diffy.phar
