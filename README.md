@@ -90,7 +90,7 @@ PAGE_NUMBER is number of the page results (starts from 0)
 
 ### Github integration
 
-Main documentation page http://diffy.website/documentation/github-integration
+Main documentation page http://diffy.website/documentation/github-integration 
 
 The only difference you will need to have is to pass commit sha to compare operation:
 
