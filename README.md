@@ -69,10 +69,16 @@ Allowed environments are: prod, stage, dev, custom.
 If you want to update your config (For example, from CICD)
 
 ```shell script
-diffy project:update PROJECT_ID ./examples/diffy.config.json
+diffy project:update PROJECT_ID ./examples/diffy_update_project.json
 ```
 
-See the ./examples/diffy.config.json fule for a valid config file.
+See the ./examples/diffy.config.json file for a valid config file.
+
+Similar you can create a project by passing the config file.
+
+```shell script
+diffy project:create ./examples/diffy_create_project.json
+```
 
 Get the full settings of the project
 
@@ -90,7 +96,7 @@ PAGE_NUMBER is number of the page results (starts from 0)
 
 ### Github integration
 
-Main documentation page http://diffy.website/documentation/github-integration 
+Main documentation page http://diffy.website/documentation/github-integration
 
 The only difference you will need to have is to pass commit sha to compare operation:
 

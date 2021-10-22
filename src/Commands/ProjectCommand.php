@@ -87,7 +87,7 @@ class ProjectCommand extends \Robo\Tasks
      * @param int $projectId Id of the project.
      * @param string $configurationPath Path to the json config file.
      *
-     * @usage project:update 342 ./examples/diffy.config.json
+     * @usage project:update 342 ./examples/diffy_update_project.json
      *   Updates given project ID with the diffy config.
      *
      * @throws \GuzzleHttp\Exception\InvalidArgumentException
@@ -113,7 +113,43 @@ class ProjectCommand extends \Robo\Tasks
             throw $exception;
         }
 
-        Diffy::request('POST', '/api/projects/' . $projectId, $configuration);
+        Project::update($projectId, $configuration);
+    }
+
+    /**
+     * Create project
+     *
+     * @command project:create
+     *
+     * @param string $configurationPath Path to the json config file.
+     *
+     * @usage project:create ./examples/diffy_update_project.json
+     *   Create a project with the diffy config.
+     *
+     * @throws \GuzzleHttp\Exception\InvalidArgumentException
+     */
+    public function createProject(
+        string $configurationPath
+    ) {
+        $io = new SymfonyStyle($this->input(), $this->output());
+        $apiKey = Config::getConfig()['key'];
+        Diffy::setApiKey($apiKey);
+        $configuration = file_get_contents($configurationPath);
+
+        if (!$configuration) {
+            $io->write(sprintf('Configuration not found on path : %s', $configurationPath));
+            throw new InvalidArgumentException();
+        }
+
+        try {
+            $configuration = json_decode($configuration, true);
+        } catch (InvalidArgumentException $exception) {
+            $io->write('Configuration is not valid JSON ');
+            throw $exception;
+        }
+
+        $project_id = Project::create($configuration);
+        $io->write($project_id);
     }
 
 
