@@ -5,6 +5,9 @@ namespace DiffyCli\Commands;
 use Diffy\Diffy;
 use Diffy\Screenshot;
 use DiffyCli\Config;
+use GuzzleHttp\Exception\InvalidArgumentException;
+use Symfony\Component\Console\Style\SymfonyStyle;
+use function GuzzleHttp\json_decode;
 
 class ScreenshotCommand extends \Robo\Tasks
 {
@@ -47,6 +50,42 @@ class ScreenshotCommand extends \Robo\Tasks
                 $i += $sleep;
             }
         }
+
+        $this->io()->write($screenshotId);
+    }
+
+    /**
+     * Create a screenshot from uploade images
+     *
+     * @command screenshot:create-uploaded
+     *
+     * @param int $projectId ID of the project
+     * @param string $configurationPath Path to the json config file.
+     *   Json encoded array of snapshotName and arrays "files", "breakpoints", "urls".
+     *
+     * @usage screenshot:create-uploaded 342 ./diffy_create_screenshot_upload.json
+     */
+    public function createScreenshotUpload($projectId, string $configurationPath)
+    {
+        $apiKey = Config::getConfig()['key'];
+
+        Diffy::setApiKey($apiKey);
+
+        $configuration = file_get_contents($configurationPath);
+
+        if (!$configuration) {
+            $this->io()->write(sprintf('Configuration not found on path : %s', $configurationPath));
+            throw new InvalidArgumentException();
+        }
+
+        try {
+            $configuration = json_decode($configuration, true);
+        } catch (InvalidArgumentException $exception) {
+            $this->io()->write('Configuration is not valid JSON ');
+            throw $exception;
+        }
+
+        $screenshotId = Screenshot::createUpload($projectId, $configuration);
 
         $this->io()->write($screenshotId);
     }

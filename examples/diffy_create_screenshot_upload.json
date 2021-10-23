@@ -1,0 +1,16 @@
+{
+  "snapshotName" : "Test custom uploaded screenshots",
+  "breakpoints" : [
+    320, 1024, 1920
+  ],
+  "urls": [
+    "/faq",
+    "/faq",
+    "/questions"
+  ],
+  "files": [
+    "examples/images/pineapple-320.png",
+    "examples/images/pineapple-1024.png",
+    "examples/images/pineapple-1920.png"
+  ]
+}
