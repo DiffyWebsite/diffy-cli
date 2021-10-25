@@ -148,7 +148,7 @@ class ProjectCommand extends \Robo\Tasks
             throw $exception;
         }
 
-        $project_id = Project::create($configuration);
+        $project_id = Project::createFromData($configuration);
         $io->write($project_id);
     }
 
