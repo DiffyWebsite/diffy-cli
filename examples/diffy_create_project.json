@@ -12,5 +12,9 @@
     "https://your-site.com/news"
   ],
 
-  "schedule": "mon:false, tue:false, wed:false, thu:false, fri:false, sat:false, sun:false"
+  "schedule": "mon:false, tue:false, wed:false, thu:false, fri:false, sat:false, sun:false",
+  "advanced": {
+    "psScreenshotJs": true,
+    "psScreenshotJsCode": "if (window.location.hash == '#add-item') { \n      $('.form-control__button').trigger('click');\n}"
+  }
 }
