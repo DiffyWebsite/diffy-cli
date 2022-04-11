@@ -71,6 +71,7 @@ If you want to update your config (For example, from CICD)
 ```shell script
 diffy project:update PROJECT_ID ./examples/diffy_update_project.json
 ```
+> For multiple projects, use PROJECT_ID < 1. It will be set by the array's key.
 
 See the ./examples/diffy_update_project.json file for a valid config file.
 
@@ -79,6 +80,7 @@ Similar you can create a project by passing the config file.
 ```shell script
 diffy project:create ./examples/diffy_create_project.json
 ```
+> You can create multiple projects by giving an array of projects.
 
 Get the full settings of the project
 

@@ -76,7 +76,7 @@ class ProjectCommand extends \Robo\Tasks
             }
         }
 
-        $io->write($diffId);
+        $io->writeln($diffId);
     }
 
     /**
@@ -84,7 +84,7 @@ class ProjectCommand extends \Robo\Tasks
      *
      * @command project:update
      *
-     * @param int $projectId Id of the project.
+     * @param int $projectId Id of the project (ignored if <1).
      * @param string $configurationPath Path to the json config file.
      *
      * @usage project:update 342 ./examples/diffy_update_project.json
@@ -102,18 +102,29 @@ class ProjectCommand extends \Robo\Tasks
         $configuration = file_get_contents($configurationPath);
 
         if (!$configuration) {
-            $io->write(sprintf('Configuration not found on path : %s', $configurationPath));
+            $io->writeln(sprintf('Configuration not found on path : %s', $configurationPath));
             throw new InvalidArgumentException();
         }
 
         try {
             $configuration = json_decode($configuration, true);
         } catch (InvalidArgumentException $exception) {
-            $io->write('Configuration is not valid JSON ');
+            $io->writeln('<error>Configuration is not valid JSON<error>');
             throw $exception;
         }
 
-        Project::update($projectId, $configuration);
+        // Multiple projects.
+        if($projectId < 1 ) {
+            foreach($configuration as $projectId => $project_config) {
+                Project::update($projectId, $project_config);
+                $io->writeln('Project <info>' . $projectId . '</info> updated.' );
+            }
+        }
+        else {
+            // Single project.
+            Project::update($projectId, $configuration);
+            $io->writeln('Project <info>' . $projectId . '</info> updated.' );
+        }
     }
 
     /**
@@ -137,19 +148,29 @@ class ProjectCommand extends \Robo\Tasks
         $configuration = file_get_contents($configurationPath);
 
         if (!$configuration) {
-            $io->write(sprintf('Configuration not found on path : %s', $configurationPath));
+            $io->writeln(sprintf('Configuration not found on path : %s', $configurationPath));
             throw new InvalidArgumentException();
         }
 
         try {
             $configuration = json_decode($configuration, true);
         } catch (InvalidArgumentException $exception) {
-            $io->write('Configuration is not valid JSON ');
+            $io->writeln('Configuration is not valid JSON');
             throw $exception;
         }
 
-        $project_id = Project::createFromData($configuration);
-        $io->write($project_id);
+        // Multiple projects (detect with mandatory data 'urls').
+        if(!empty($configuration[0]) && is_array($configuration[0]) && !empty($configuration[0]['urls'])) {
+            foreach($configuration as $project_config) {
+                $project_id = Project::createFromData($project_config);
+                $io->writeln('[<info>' . $project_id . '</info>] <comment>'. $project_config['name'] . '</comment> created.');
+            }
+        }
+        else {
+            // Single project.
+            $project_id = Project::createFromData($configuration);
+            $io->writeln('[<info>' . $project_id . '</info>] <comment>'. $project_config['name'] . '</comment> created.');
+        }
     }
 
 
@@ -174,6 +195,6 @@ class ProjectCommand extends \Robo\Tasks
 
         $project = Project::get($projectId);
 
-        $io->write(json_encode($project));
+        $io->writeln(json_encode($project));
     }
 }
