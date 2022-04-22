@@ -1,0 +1,32 @@
+{
+  "1" : {
+    "name" : "Your project1 name",
+    "breakpoints" : [
+      320, 1024, 1920
+    ],
+    "production" : "https://your-site1.com",
+    "staging": "https://user1:password1@staging.your-site1.com",
+    "development": "https://user1:password1@dev.your-site1.com",
+    "urls": [
+      "https://your-site1.com/faq",
+      "https://your-site1.com/questions",
+      "https://your-site1.com/news"
+    ],
+
+    "schedule": "mon:false, tue:false, wed:false, thu:false, fri:false, sat:false, sun:false"
+  },
+  "2" : {
+    "name" : "Your project2 name",
+    "breakpoints" : [
+      320, 1024, 1920
+    ],
+    "production" : "https://your-site2.com",
+    "staging": "https://user2:password2@staging.your-site2.com",
+    "development": "https://user2:password2@dev.your-site2.com",
+    "urls": [
+      "https://your-site2.com/faq",
+      "https://your-site2.com/questions",
+      "https://your-site2.com/news"
+    ]
+  }
+}
