@@ -37,6 +37,8 @@ This will save the key for future usages.
 
 ### Commands
 
+#### Take screenshots
+
 ```shell script
 diffy screenshot:create PROJECT_ID ENVIRONMENT
 ```
@@ -66,27 +68,37 @@ diffy project:compare PROJECT_ID prod custom --env2Url="https://custom.example.c
 
 Allowed environments are: prod, stage, dev, custom.
 
+#### Update project(s)
+
 If you want to update your config (For example, from CICD)
 
 ```shell script
 diffy project:update PROJECT_ID ./examples/diffy_update_project.json
 ```
-
 See the ./examples/diffy_update_project.json file for a valid config file.
 
+For multiple projects
+```shell script
+diffy projects:update ./examples/diffy_update_projects.json
+```
+The PROJECT_ID is defined by the key inside the JSON object.
+
+#### Create project(s)
 Similar you can create a project by passing the config file.
 
 ```shell script
 diffy project:create ./examples/diffy_create_project.json
 ```
+You can create multiple projects by giving an array of projects.
 
+#### Get project information
 Get the full settings of the project
 
 ```shell script
 diffy project:get PROJECT_ID
 ```
 
-Get list of diffs
+#### Get list of diffs
 
 ```shell script
 diffy diff:list PROJECT_ID PAGE_NUMBER
@@ -94,7 +106,7 @@ diffy diff:list PROJECT_ID PAGE_NUMBER
 PROJECT_ID is an ID of the project. You can get it from URL of your project.
 PAGE_NUMBER is number of the page results (starts from 0)
 
-Create screenshots from images
+#### Create screenshots from images
 
 ```shell script
 diffy screenshot:create-uploaded 342 ./examples/diffy_create_screenshot_upload.json

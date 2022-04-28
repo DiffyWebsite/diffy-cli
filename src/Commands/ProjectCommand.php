@@ -13,6 +13,37 @@ use function GuzzleHttp\json_decode;
 class ProjectCommand extends \Robo\Tasks
 {
     /**
+     * Verify the inpout Json config.
+     *
+     * @param string $configurationPath Path to the json config file.
+     * @throws \GuzzleHttp\Exception\InvalidArgumentException
+     * @return string
+     */
+    private function isValidJsonConfig(
+        string $configurationPath
+    ) {
+        $io = new SymfonyStyle($this->input(), $this->output());
+        $apiKey = Config::getConfig()['key'];
+        Diffy::setApiKey($apiKey);
+
+        $configuration = file_get_contents($configurationPath);
+
+        if (!$configuration) {
+            $io->writeln(sprintf('Configuration not found on path : %s', $configurationPath));
+            throw new InvalidArgumentException();
+        }
+
+        try {
+            $configuration = json_decode($configuration, true);
+        } catch (InvalidArgumentException $exception) {
+            $io->writeln('<error>Configuration is not valid JSON<error>');
+            throw $exception;
+        }
+        
+        return $configuration;
+    }
+
+    /**
      * Compare environments.
      *
      * @command project:compare
@@ -76,11 +107,11 @@ class ProjectCommand extends \Robo\Tasks
             }
         }
 
-        $io->write($diffId);
+        $io->writeln($diffId);
     }
 
     /**
-     * Update project configuration
+     * Update single project configuration
      *
      * @command project:update
      *
@@ -96,24 +127,35 @@ class ProjectCommand extends \Robo\Tasks
         int $projectId,
         string $configurationPath
     ) {
-        $io = new SymfonyStyle($this->input(), $this->output());
-        $apiKey = Config::getConfig()['key'];
-        Diffy::setApiKey($apiKey);
-        $configuration = file_get_contents($configurationPath);
-
-        if (!$configuration) {
-            $io->write(sprintf('Configuration not found on path : %s', $configurationPath));
-            throw new InvalidArgumentException();
-        }
-
-        try {
-            $configuration = json_decode($configuration, true);
-        } catch (InvalidArgumentException $exception) {
-            $io->write('Configuration is not valid JSON ');
-            throw $exception;
-        }
-
+        $configuration = $this->isValidJsonConfig($configurationPath);
+        
         Project::update($projectId, $configuration);
+        $io->writeln('Project <info>' . $projectId . '</info> updated.' );
+    }
+
+    /**
+     * Update multiple projects configurations by one json config file.
+     *
+     * @command projects:update
+     *
+     * @param string $configurationPath Path to the json config file.
+     *
+     * @usage projects:update ./examples/diffy_update_projects.json
+     *   Updates given projects ID with the diffy config.
+     *
+     * @throws \GuzzleHttp\Exception\InvalidArgumentException
+     */
+    public function updateProjects(
+        string $configurationPath
+    ) {
+        $configuration = $this->isValidJsonConfig($configurationPath);
+
+        if(!empty($configuration) && is_array($configuration)) {
+            foreach($configuration as $projectId => $project_config) {
+                Project::update($projectId, $project_config);
+                $io->writeln('Project <info>' . $projectId . '</info> updated.' );
+            }
+        }
     }
 
     /**
@@ -131,25 +173,20 @@ class ProjectCommand extends \Robo\Tasks
     public function createProject(
         string $configurationPath
     ) {
-        $io = new SymfonyStyle($this->input(), $this->output());
-        $apiKey = Config::getConfig()['key'];
-        Diffy::setApiKey($apiKey);
-        $configuration = file_get_contents($configurationPath);
+        $configuration = $this->isValidJsonConfig($configurationPath);
 
-        if (!$configuration) {
-            $io->write(sprintf('Configuration not found on path : %s', $configurationPath));
-            throw new InvalidArgumentException();
+        // Multiple projects (detect with mandatory data 'urls').
+        if(!empty($configuration[0]) && is_array($configuration[0]) && !empty($configuration[0]['urls'])) {
+            foreach($configuration as $project_config) {
+                $project_id = Project::createFromData($project_config);
+                $io->writeln('[<info>' . $project_id . '</info>] <comment>'. $project_config['name'] . '</comment> created.');
+            }
         }
-
-        try {
-            $configuration = json_decode($configuration, true);
-        } catch (InvalidArgumentException $exception) {
-            $io->write('Configuration is not valid JSON ');
-            throw $exception;
+        else {
+            // Single project.
+            $project_id = Project::createFromData($configuration);
+            $io->writeln('[<info>' . $project_id . '</info>] <comment>'. $project_config['name'] . '</comment> created.');
         }
-
-        $project_id = Project::createFromData($configuration);
-        $io->write($project_id);
     }
 
 
@@ -174,6 +211,6 @@ class ProjectCommand extends \Robo\Tasks
 
         $project = Project::get($projectId);
 
-        $io->write(json_encode($project));
+        $io->writeln(json_encode($project));
     }
 }
