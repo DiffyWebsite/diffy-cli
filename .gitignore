@@ -1,5 +1,6 @@
 .idea/
 *.phar
+composer.lock
 build
 tools
 vendor/

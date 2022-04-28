@@ -7,40 +7,43 @@ use Diffy\Diffy;
 use Diffy\Project;
 use DiffyCli\Config;
 use GuzzleHttp\Exception\InvalidArgumentException;
+use Robo\Tasks;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use function GuzzleHttp\json_decode;
 
-class ProjectCommand extends \Robo\Tasks
+class ProjectCommand extends Tasks
 {
+    /** @var SymfonyStyle */
+    protected $io;
+
     /**
-     * Verify the inpout Json config.
+     * Verify the input JSON config.
      *
      * @param string $configurationPath Path to the json config file.
-     * @throws \GuzzleHttp\Exception\InvalidArgumentException
-     * @return string
+     *
+     * @throws InvalidArgumentException
+     *
+     * @return array
      */
-    private function isValidJsonConfig(
-        string $configurationPath
-    ) {
-        $io = new SymfonyStyle($this->input(), $this->output());
-        $apiKey = Config::getConfig()['key'];
-        Diffy::setApiKey($apiKey);
+    private function isValidJsonConfig(string $configurationPath): array
+    {
+        Diffy::setApiKey(Config::getConfig()['key']);
 
         $configuration = file_get_contents($configurationPath);
 
         if (!$configuration) {
-            $io->writeln(sprintf('Configuration not found on path : %s', $configurationPath));
+            $this->getIO()->writeln(sprintf('Configuration not found on path : %s', $configurationPath));
+
             throw new InvalidArgumentException();
         }
 
         try {
-            $configuration = json_decode($configuration, true);
+            return json_decode($configuration, true);
         } catch (InvalidArgumentException $exception) {
-            $io->writeln('<error>Configuration is not valid JSON<error>');
+            $this->getIO()->writeln('<error>Configuration is not valid JSON<error>');
+
             throw $exception;
         }
-        
-        return $configuration;
     }
 
     /**
@@ -73,8 +76,7 @@ class ProjectCommand extends \Robo\Tasks
         string $env2,
         array $options = ['wait' => false, 'max-wait' => 1200, 'env1Url' => '', 'env2Url' => '', 'commit-sha' => null]
     ) {
-        $io = new SymfonyStyle($this->input(), $this->output());
-        $apiKey = Config::getConfig()['key'];
+        Diffy::setApiKey(Config::getConfig()['key']);
 
         $params = [
             'env1' => $env1,
@@ -87,16 +89,14 @@ class ProjectCommand extends \Robo\Tasks
             $params['commitSha'] = $options['commit-sha'];
         }
 
-        Diffy::setApiKey($apiKey);
         $diffId = Project::compare($projectId, $params);
 
         if (!empty($options['wait']) && $options['wait'] == true) {
             $sleep = 10;
-            $max_wait = (int) $options['max-wait'];
             sleep($sleep);
             $i = 0;
             $diff = Diff::retrieve($diffId);
-            while ($i < $max_wait / $sleep) {
+            while ($i < (int)$options['max-wait'] / $sleep) {
                 if ($diff->isCompleted()) {
                     break;
                 }
@@ -107,7 +107,7 @@ class ProjectCommand extends \Robo\Tasks
             }
         }
 
-        $io->writeln($diffId);
+        $this->getIO()->writeln($diffId);
     }
 
     /**
@@ -121,16 +121,13 @@ class ProjectCommand extends \Robo\Tasks
      * @usage project:update 342 ./examples/diffy_update_project.json
      *   Updates given project ID with the diffy config.
      *
-     * @throws \GuzzleHttp\Exception\InvalidArgumentException
+     * @throws InvalidArgumentException
      */
-    public function updateProject(
-        int $projectId,
-        string $configurationPath
-    ) {
-        $configuration = $this->isValidJsonConfig($configurationPath);
-        
-        Project::update($projectId, $configuration);
-        $io->writeln('Project <info>' . $projectId . '</info> updated.' );
+    public function updateProject(int $projectId, string $configurationPath)
+    {
+        Project::update($projectId, $this->isValidJsonConfig($configurationPath));
+
+        $this->getIO()->writeln('Project <info>' . $projectId . '</info> updated.' );
     }
 
     /**
@@ -143,17 +140,17 @@ class ProjectCommand extends \Robo\Tasks
      * @usage projects:update ./examples/diffy_update_projects.json
      *   Updates given projects ID with the diffy config.
      *
-     * @throws \GuzzleHttp\Exception\InvalidArgumentException
+     * @throws InvalidArgumentException
      */
-    public function updateProjects(
-        string $configurationPath
-    ) {
+    public function updateProjects(string $configurationPath)
+    {
         $configuration = $this->isValidJsonConfig($configurationPath);
 
-        if(!empty($configuration) && is_array($configuration)) {
-            foreach($configuration as $projectId => $project_config) {
-                Project::update($projectId, $project_config);
-                $io->writeln('Project <info>' . $projectId . '</info> updated.' );
+        foreach ($configuration as $projectId => $projectConfig) {
+            if (is_array($projectConfig)) {
+                Project::update($projectId, $projectConfig);
+
+                $this->getIO()->writeln('Project <info>' . $projectId . '</info> updated.' );
             }
         }
     }
@@ -168,27 +165,24 @@ class ProjectCommand extends \Robo\Tasks
      * @usage project:create ./examples/diffy_update_project.json
      *   Create a project with the diffy config.
      *
-     * @throws \GuzzleHttp\Exception\InvalidArgumentException
+     * @throws InvalidArgumentException
      */
-    public function createProject(
-        string $configurationPath
-    ) {
+    public function createProject(string $configurationPath)
+    {
         $configuration = $this->isValidJsonConfig($configurationPath);
 
         // Multiple projects (detect with mandatory data 'urls').
-        if(!empty($configuration[0]) && is_array($configuration[0]) && !empty($configuration[0]['urls'])) {
-            foreach($configuration as $project_config) {
+        if (!empty($configuration[0]) && is_array($configuration[0]) && !empty($configuration[0]['urls'])) {
+            foreach ($configuration as $project_config) {
                 $project_id = Project::createFromData($project_config);
-                $io->writeln('[<info>' . $project_id . '</info>] <comment>'. $project_config['name'] . '</comment> created.');
+                $this->getIO()->writeln('[<info>' . $project_id . '</info>] <comment>'. $project_config['name'] . '</comment> created.');
             }
-        }
-        else {
+        } else {
             // Single project.
             $project_id = Project::createFromData($configuration);
-            $io->writeln('[<info>' . $project_id . '</info>] <comment>'. $project_config['name'] . '</comment> created.');
+            $this->getIO()->writeln('[<info>' . $project_id . '</info>] <comment>'. $configuration['name'] . '</comment> created.');
         }
     }
-
 
     /**
      * Get project settings
@@ -200,17 +194,23 @@ class ProjectCommand extends \Robo\Tasks
      * @usage project:get 342
      *   Gets the settings of the project 342.
      *
-     * @throws \GuzzleHttp\Exception\InvalidArgumentException
+     * @throws InvalidArgumentException
      */
-    public function getProject(
-        int $projectId
-    ) {
-        $io = new SymfonyStyle($this->input(), $this->output());
-        $apiKey = Config::getConfig()['key'];
-        Diffy::setApiKey($apiKey);
+    public function getProject(int $projectId)
+    {
+        Diffy::setApiKey(Config::getConfig()['key']);
 
         $project = Project::get($projectId);
 
-        $io->writeln(json_encode($project));
+        $this->getIO()->writeln(json_encode($project));
+    }
+
+    protected function getIO(): SymfonyStyle
+    {
+        if (!$this->io) {
+            $this->io = new SymfonyStyle($this->input(), $this->output());
+        }
+
+        return $this->io;
     }
 }

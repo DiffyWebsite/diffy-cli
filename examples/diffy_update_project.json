@@ -11,6 +11,7 @@
     "https://your-site.com/questions",
     "https://your-site.com/news"
   ],
-
-  "schedule": "mon:false, tue:false, wed:false, thu:false, fri:false, sat:false, sun:false"
+  "schedule": {
+    "type": ""
+  }
 }

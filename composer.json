@@ -20,6 +20,7 @@
     },
     "require": {
         "php": ">=7.1",
+        "ext-json": "*",
         "consolidation/robo": "^3",
         "diffywebsite/diffy-php": "1.x-dev",
         "guzzlehttp/guzzle": "^6.5"

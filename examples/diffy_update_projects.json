@@ -12,8 +12,9 @@
       "https://your-site1.com/questions",
       "https://your-site1.com/news"
     ],
-
-    "schedule": "mon:false, tue:false, wed:false, thu:false, fri:false, sat:false, sun:false"
+    "schedule": {
+      "type": ""
+    }
   },
   "2" : {
     "name" : "Your project2 name",
@@ -27,6 +28,9 @@
       "https://your-site2.com/faq",
       "https://your-site2.com/questions",
       "https://your-site2.com/news"
-    ]
+    ],
+    "schedule": {
+      "type": ""
+    }
   }
 }
