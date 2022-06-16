@@ -9,6 +9,7 @@ use Diffy\Project;
 use DiffyCli\Config;
 use DiffyCli\LambdaTest;
 use Exception;
+use Robo\Tasks;
 
 /**
  * Integration with lambdatest.com.
@@ -16,12 +17,9 @@ use Exception;
  * Class LambdaTestCommand
  * @package DiffyCli\Commands
  */
-class LambdaTestCommand extends \Robo\Tasks
+class LambdaTestCommand extends Tasks
 {
-
-    /**
-     * @var $lambdaTest LambdaTest
-     */
+    /** @var LambdaTest */
     protected $lambdaTest;
 
     protected $waitScreenshotsInterval = 5; // Seconds
@@ -37,6 +35,7 @@ class LambdaTestCommand extends \Robo\Tasks
      * @param string $accessToken Your Lambdatest Access Token. Obtain your key at https://accounts.lambdatest.com/detail/profile
      *
      * @usage lambdatest:save-credentials <username> <access_token> Saves the username <username> and access Key <access_token> to configuration for future use.
+     *
      * @throws Exception
      */
     public function saveLambdaTestCredentials($username, $accessToken)
@@ -92,7 +91,6 @@ class LambdaTestCommand extends \Robo\Tasks
         string $lambdaTestKeys,
         array $options = ['wait' => 5]
     ) {
-
         $waitTime = (int)$options['wait'];
 
         $lambdaTestWaitValues = [2, 5, 10, 15, 20, 60];
@@ -269,15 +267,16 @@ class LambdaTestCommand extends \Robo\Tasks
         return $browsers;
     }
 
-
     /**
      * Create lambdatest key from lambdatest browser params.
      *
-     * @param $browser
-     * @param bool $onlyKey
+     * @param $os
+     * @param $browserName
+     * @param $browserVersion
+     *
      * @return array|string
      */
-    private function preparelambdatestKey($os, $browserName, $browserVersion, $onlyKey = false)
+    private function preparelambdatestKey($os, $browserName, $browserVersion)
     {
         $key = '';
         if (!empty($os) && !empty($browserName) && !empty($browserVersion)) {

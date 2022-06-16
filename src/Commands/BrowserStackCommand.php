@@ -9,19 +9,11 @@ use Diffy\Project;
 use DiffyCli\Config;
 use DiffyCli\BrowserStack;
 use Exception;
+use Robo\Tasks;
 
-/**
- *
- *
- * Class BrowserStackCommand
- * @package DiffyCli\Commands
- */
-class BrowserStackCommand extends \Robo\Tasks
+class BrowserStackCommand extends Tasks
 {
-
-    /**
-     * @var $browserStack BrowserStack
-     */
+    /** BrowserStack */
     private $browserStack;
 
     private $waitScreenshotsInterval = 5; // Seconds
@@ -37,6 +29,7 @@ class BrowserStackCommand extends \Robo\Tasks
      * @param string $accessKey Your Browserstack Access Key. Obtain your key at https://www.browserstack.com/accounts/settings
      *
      * @usage browserstack:save-credentials <username> <access_key> Saves the username <username> and access Key <access_key> to configuration for future use.
+     *
      * @throws Exception
      */
     public function saveBrowserStackCredentials($username, $accessKey)
@@ -59,14 +52,11 @@ class BrowserStackCommand extends \Robo\Tasks
         $headers = ['browser', 'browser version', 'os', 'os version', 'browser key'];
         $rows = [];
 
-        usort(
-            $browsers,
-            function ($a, $b) {
-                return strcmp($a['browser'], $b['browser']);
-            }
-        );
+        usort($browsers, function ($a, $b) {
+            return strcmp($a['browser'], $b['browser']);
+        });
 
-        foreach ($browsers as $id => $browser) {
+        foreach ($browsers as $browser) {
             $keyData = $this->prepareBrowserStackKey($browser);
             if (!empty($keyData)) {
                 $rows[] = $keyData;
@@ -75,7 +65,6 @@ class BrowserStackCommand extends \Robo\Tasks
 
         $this->io()->table($headers, $rows);
     }
-
 
     /**
      * Create screenshots via browserstack and upload them to Diffy.
@@ -98,7 +87,6 @@ class BrowserStackCommand extends \Robo\Tasks
         string $browserStackKeys,
         array $options = ['wait' => 5]
     ) {
-
         $waitTime = (int)$options['wait'];
 
         if (!in_array($waitTime, $this->browserStackWaitValues)) {
@@ -262,7 +250,6 @@ class BrowserStackCommand extends \Robo\Tasks
 
         return $params;
     }
-
 
     /**
      * Create browserstack key from browserstack browser params.

@@ -6,10 +6,10 @@ use Diffy\Diffy;
 use Diffy\Screenshot;
 use DiffyCli\Config;
 use GuzzleHttp\Exception\InvalidArgumentException;
-use Symfony\Component\Console\Style\SymfonyStyle;
+use Robo\Tasks;
 use function GuzzleHttp\json_decode;
 
-class ScreenshotCommand extends \Robo\Tasks
+class ScreenshotCommand extends Tasks
 {
     /**
      * Create a screenshot from environment
@@ -20,7 +20,9 @@ class ScreenshotCommand extends \Robo\Tasks
      * @param string $environment Environment of the project. Can be one of "production", "staging", "development", "custom"
      *
      * @param array $options
+     *
      * @throws \Diffy\InvalidArgumentsException
+     *
      * @option wait Wait for the screenshot to be completed
      * @option max-wait Maximum number of seconds to wait for the screenshot to be completed.
      *

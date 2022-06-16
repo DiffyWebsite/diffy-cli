@@ -4,8 +4,9 @@ namespace DiffyCli\Commands;
 
 use Diffy\Diffy;
 use DiffyCli\Config;
+use Robo\Tasks;
 
-class AuthCommand extends \Robo\Tasks
+class AuthCommand extends Tasks
 {
     /**
      * Logs in to Diffy

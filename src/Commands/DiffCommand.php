@@ -6,8 +6,9 @@ use Diffy\Diff;
 use Diffy\Diffy;
 use Diffy\InvalidArgumentsException;
 use DiffyCli\Config;
+use Robo\Tasks;
 
-class DiffCommand extends \Robo\Tasks
+class DiffCommand extends Tasks
 {
     /**
      * Create a diff from screenshots
@@ -17,9 +18,10 @@ class DiffCommand extends \Robo\Tasks
      * @param int $projectId ID of the project
      * @param int $screenshotId1 ID of the first screenshot to compare
      * @param int $screenshotId2 ID of the second screenshot to compare
-     *
      * @param array $options
+     *
      * @throws InvalidArgumentsException
+     *
      * @option wait Wait for the diff to be completed
      * @option max-wait Maximum number of seconds to wait for the diff to be completed.
      *
@@ -32,7 +34,6 @@ class DiffCommand extends \Robo\Tasks
         int $screenshotId2,
         array $options = ['wait' => false, 'max-wait' => 1200]
     ) {
-
         $apiKey = Config::getConfig()['key'];
 
         Diffy::setApiKey($apiKey);
@@ -66,6 +67,7 @@ class DiffCommand extends \Robo\Tasks
      * @param int $diffId
      *
      * @return mixed
+     *
      * @throws \Exception
      *
      * @usage diff:get-status 12345 Get diff status.
@@ -87,7 +89,9 @@ class DiffCommand extends \Robo\Tasks
      * @param int $diffId
      *
      * @return mixed
+     *
      * @throws \Exception
+     *
      * @usage diff:get-changes-percent 12345 Get diff changes percent.
      */
     public function getDiffPercent(int $diffId)
@@ -108,7 +112,9 @@ class DiffCommand extends \Robo\Tasks
      * @param int $page
      *
      * @return mixed
+     *
      * @throws \Exception
+     *
      * @usage diff:list 12345 1 Get diffs list for project (page 1).
      */
     public function getDiffs(int $projectId, $page = 0)

@@ -6,7 +6,6 @@ use Symfony\Component\Yaml\Yaml;
 
 class Config
 {
-
     /**
      * Save API Key to configuration file.
      *
@@ -94,8 +93,7 @@ class Config
                     'Configuration file "' . $configFilePath . '" does not exist yet. Save your API KEY with "diffy auth:login" command.'
                 );
             }
-        }
-        else {
+        } else {
             $config = Yaml::parseFile($configFilePath);
         }
 

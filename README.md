@@ -66,6 +66,12 @@ or in case of custom environments
 diffy project:compare PROJECT_ID prod custom --env2Url="https://custom.example.com"
 ```
 
+or in case of custom environment with basic auth credentials
+
+```shell script
+diffy project:compare PROJECT_ID prod custom --env2Url="https://custom.example.com" --env2User="user" --env2Pass="password"
+```
+
 Allowed environments are: prod, stage, dev, custom.
 
 #### Update project(s)
