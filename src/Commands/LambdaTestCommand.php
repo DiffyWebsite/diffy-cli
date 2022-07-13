@@ -54,21 +54,20 @@ class LambdaTestCommand extends Tasks
     public function browserKeysList()
     {
         $this->login();
-        $response = $this->lambdatest->getBrowsers();
+        $response = $this->lambdaTest->getBrowsers();
         $headers = ['os', 'browser', 'browser version', 'browser key'];
         $rows = [];
 
         foreach ($response as $os => $os_row) {
             foreach ($os_row as $browser => $browser_row) {
                 foreach ($browser_row as $browser_version) {
-                    $rows[] = [$os, $browser, $browser_version, $this->preparelambdatestKey($os, $browser, $browser_version) ];
+                    $rows[] = [$os, $browser, $browser_version, $this->prepareLambdaTestKey($os, $browser, $browser_version) ];
                 }
             }
         }
 
         $this->io()->table($headers, $rows);
     }
-
 
     /**
      * Create screenshots via lambdatest and upload them to Diffy.
@@ -83,7 +82,7 @@ class LambdaTestCommand extends Tasks
      * @throws InvalidArgumentsException
      *
      * @usage lambdatest:screenshot 1194 http://site.com windows__10--opera--75 Create screenshot for project with ID 1194, base url http://site.com and one browser windows__10--opera--75.
-     * @usage lambdatest:screenshot --wait=10 1194 http://site.com windows__10--opera--75,windows__10--chrome--90 Create screenshot for project with ID 1194, base url http://site.com and two browsers windows__10--opera--75 and windows__10--chrome--90 with delay bofore screenshot 10 seconds.
+     * @usage lambdatest:screenshot --wait=10 1194 http://site.com windows__10--opera--75,windows__10--chrome--90 Create screenshot for project with ID 1194, base url http://site.com and two browsers windows__10--opera--75 and windows__10--chrome--90 with delay before screenshot 10 seconds.
      */
     public function lambdatestScreenshot(
         int $projectId,
@@ -93,10 +92,8 @@ class LambdaTestCommand extends Tasks
     ) {
         $waitTime = (int)$options['wait'];
 
-        $lambdaTestWaitValues = [2, 5, 10, 15, 20, 60];
-
-        if (!in_array($waitTime, $lambdaTestWaitValues)) {
-            throw new Exception('--wait option should be one of '.implode(', ', $lambdaTestWaitValues));
+        if (!in_array($waitTime, $this->lambdaTestWaitValues)) {
+            throw new Exception('--wait option should be one of '.implode(', ', $this->lambdaTestWaitValues));
         }
 
         $this->login();
@@ -130,7 +127,7 @@ class LambdaTestCommand extends Tasks
         // Start screenshots.
         $screenshotResults = [];
 
-        $browsers = $this->getlambdatestParams($lambdaTestKeys);
+        $browsers = $this->getLambdaTestParams($lambdaTestKeys);
 
         // Init progress bar.
         $progress = $this->io()->createProgressBar(count($urls));
@@ -139,15 +136,16 @@ class LambdaTestCommand extends Tasks
         foreach ($urls as $i => $url) {
             $progress->setMessage("Processing screenshot: $url");
             $progress->setProgress($i);
-            $item = $this->lambdatest->createScreenshot($url, $browsers, $waitTime);
+            $item = $this->lambdaTest->createScreenshot($url, $browsers, $waitTime);
 
             if ($item && isset($item['test_id'])) {
                 // Get screenshot results
                 $result = $this->awaitScreenshotResult($item['test_id'], $progress);
                 $progress->setProgress($i + 1);
-                foreach ($result['screenshots'] as $key => $value) {
-                    $imageUrl = $value['screenshot_url'];
-                    $lambdaTestKey = $this->preparelambdatestKey($value['os'], $value['browser'], $value['browser_version']);
+
+                foreach ($result['screenshots'] as $value) {
+                    $imageUrl = str_replace('.comprod/', '.com/prod/', $value['screenshot_url']);
+                    $lambdaTestKey = $this->prepareLambdaTestKey($value['os'], $value['browser'], $value['browser_version']);
                     $uri = str_replace($baseUrl, '', $url);
                     $uri = '/'.ltrim($uri, '/');
 
@@ -208,7 +206,7 @@ class LambdaTestCommand extends Tasks
             throw new Exception('lambdatest credentials are empty. Use command diffy `lambdatest:save-credentials <username> <access_token>` for add credentials.');
         }
 
-        $this->lambdatest = new LambdaTest($config['lambdaTestUsername'], $config['lambdaTestAccessToken']);
+        $this->lambdaTest = new LambdaTest($config['lambdaTestUsername'], $config['lambdaTestAccessToken']);
     }
 
     /**
@@ -217,12 +215,15 @@ class LambdaTestCommand extends Tasks
      * @param $screenshotJobId
      * @param $progress
      * @param int $counter
+     *
      * @return mixed
+     *
      * @throws Exception
      */
     private function awaitScreenshotResult($screenshotJobId, $progress, $counter = 0)
     {
-        $item = $this->lambdatest->getListOfScreenshots($screenshotJobId);
+        $item = $this->lambdaTest->getListOfScreenshots($screenshotJobId);
+
         if ($item['status']) {
             return $item['data'];
         } else {
@@ -240,12 +241,13 @@ class LambdaTestCommand extends Tasks
     }
 
     /**
-     * Get lambdatest query params from lambdatest key.
+     * Get LambdaTest query params from LambdaTest key.
      *
      * @param array $lambdaTestKeys
+     *
      * @return array
      */
-    private function getlambdatestParams($lambdaTestKeys)
+    private function getLambdaTestParams($lambdaTestKeys)
     {
         $browsers = [];
 
@@ -268,25 +270,24 @@ class LambdaTestCommand extends Tasks
     }
 
     /**
-     * Create lambdatest key from lambdatest browser params.
+     * Create LambdaTest key from LambdaTest browser params.
      *
      * @param $os
      * @param $browserName
      * @param $browserVersion
      *
-     * @return array|string
+     * @return string
      */
-    private function preparelambdatestKey($os, $browserName, $browserVersion)
+    private function prepareLambdaTestKey($os, $browserName, $browserVersion)
     {
-        $key = '';
         if (!empty($os) && !empty($browserName) && !empty($browserVersion)) {
             $browserNameUnd = str_replace(' ', '__', $browserName);
             $browserVersionUnd = str_replace(' ', '__', $browserVersion);
             $osUnd = str_replace(' ', '__', $os);
 
-            $key = sprintf('%s--%s--%s', $osUnd, $browserNameUnd, $browserVersionUnd);
+            return sprintf('%s--%s--%s', $osUnd, $browserNameUnd, $browserVersionUnd);
         }
 
-        return $key;
+        return '';
     }
 }

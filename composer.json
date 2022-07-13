@@ -36,7 +36,7 @@
     "scripts": {
         "phar:install-tools": [
             "mkdir -p tools",
-            "curl -L https://github.com/humbug/box/releases/download/3.8.4/box.phar -o tools/box",
+            "curl -L https://github.com/humbug/box/releases/download/3.9.1/box.phar -o tools/box",
             "chmod +x tools/box"
         ],
         "phar:build": "env PATH=tools:$PATH box compile",
