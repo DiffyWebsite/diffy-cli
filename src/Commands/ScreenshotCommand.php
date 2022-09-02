@@ -91,4 +91,43 @@ class ScreenshotCommand extends Tasks
 
         $this->io()->write($screenshotId);
     }
+
+    /**
+     * Creates a new baseline from a given environment
+     *
+     * @command screenshot:create-baseline
+     *
+     * @param int $projectId ID of the project
+     * @param string $environment Environment of the project. Can be one of "production", "staging", "development", "custom"
+     *
+     * @param array $options
+     *
+     * @throws \Diffy\InvalidArgumentsException
+     *
+     * @option wait Wait for the screenshot to be completed
+     * @option max-wait Maximum number of seconds to wait for the screenshot to be completed.
+     *
+     * @usage screenshot:create-baseline 342 production Take screenshot from production on project 342.
+     * @usage screenshot:create-baseline 342 production --wait Take the screenshot and wait till they are completed.
+     */
+    public function createScreenshotBaseline($projectId, $environment, array $options = ['wait' => false, 'max-wait' => 1200])
+    {
+        $screenshotId = $this->createScreenshot($projectId, $environment, $options);
+        $this->setBaselineSet($projectId, $screenshotId);
+    }
+
+    /**
+     * Sets a new baseline from a screenshot ID.
+     *
+     * @command screenshot:create-baseline
+     *
+     * @param int $projectId ID of the project
+     * @param int $screenshotId The screenshot ID to be the baseline.
+     *
+     * @usage screenshot:set-baseline 342 4325 Set the baseline for project to be screenshot ID.
+     */
+    public function setScreenshotBaseline($projectId, $screenshotId) {
+        Screenshot::setBaselineSet($projectId, $screenshotId);
+        $this->getIO()->writeln('Baseline for project <info>' . $projectId . '</info> has been updated.' );
+    }
 }
