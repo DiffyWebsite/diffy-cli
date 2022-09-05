@@ -1,27 +1,32 @@
 dist: trusty
+sudo: false
 language: php
+
 branches:
   only:
-  - master
-  - "/^[[:digit:]]+\\.[[:digit:]]+\\.[[:digit:]]+.*$/"
+    - master
+    - "/^[[:digit:]]+\\.[[:digit:]]+\\.[[:digit:]]+.*$/"
+
 matrix:
   fast_finish: true
   include:
-  - php: 7.2
-    env: DEPENCENCIES=highest
-  - php: 7.2
-sudo: false
+    - php: 7.4
+
 cache:
   directories:
-  - "$HOME/.composer/cache"
+    - "$HOME/.composer/cache"
+
 script:
-- composer test
+  - composer test
+
 after_success:
-- travis_retry php vendor/bin/php-coveralls -v
+  - travis_retry php vendor/bin/php-coveralls -v
+
 before_deploy:
-- composer phar:install-tools
-- composer install --prefer-dist --no-dev --no-interaction
-- composer phar:build
+  - composer phar:install-tools
+  - composer install --prefer-dist --no-dev --no-interaction
+  - composer phar:build
+
 deploy:
   provider: releases
   api_key:
