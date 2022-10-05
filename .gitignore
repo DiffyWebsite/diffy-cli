@@ -4,3 +4,5 @@ composer.lock
 build
 tools
 vendor/
+.DS_Store
+*/.DS_Store

@@ -60,10 +60,10 @@ Compare screenshots with id SCREENSHOT_ID1 and SCREENSHOT_ID2
 diffy project:compare PROJECT_ID production staging
 ```
 
-or in case of custom environments
+or in case of custom environments (also set the name for the diff to be "custom")
 
 ```shell script
-diffy project:compare PROJECT_ID prod custom --env2Url="https://custom.example.com"
+diffy project:compare PROJECT_ID prod custom --env2Url="https://custom.example.com" --name="custom"
 ```
 
 or in case of custom environment with basic auth credentials

@@ -70,8 +70,8 @@ class ProjectCommand extends Tasks
      *
      * @usage project:compare 342 prod stage
      *   Compare production and stage environments.
-     * @usage project:compare --wait 342 prod custom --env2Url="https://custom-environment.example.com"
-     *   Compare production environment with https://custom-environment.example.com.
+     * @usage project:compare --wait 342 prod custom --env2Url="https://custom-environment.example.com"  --name="custom-environment"
+     *   Compare production environment with https://custom-environment.example.com and set diff name "custom-environment"
      * @usage project:compare custom custom --env1Url="http://site.com" --env2Url="http://site2.com" --commit-sha="29b872765b21387b7adfd67fd16b7f11942e1a56"
      *   Compare http://site.com with http://site2.com with github check by commit-sha.
      */
@@ -81,7 +81,7 @@ class ProjectCommand extends Tasks
         string $env2,
         array $options = [
             'wait' => false, 'max-wait' => 1200, 'commit-sha' => null, 'env1Url' => '', 'env1User' => null, 'env1Pass' => null,
-            'env2Url' => '', 'env2User' => null, 'env2Pass' => null,
+            'env2Url' => '', 'env2User' => null, 'env2Pass' => null, 'name' => ''
         ]
     ) {
         Diffy::setApiKey(Config::getConfig()['key']);
@@ -102,6 +102,10 @@ class ProjectCommand extends Tasks
         }
 
         $diffId = Project::compare($projectId, $params);
+
+        if (!empty($options['name'])) {
+            Diff::updateName($diffId, $options['name']);
+        }
 
         if (!empty($options['wait']) && $options['wait'] == true) {
             $sleep = 10;
