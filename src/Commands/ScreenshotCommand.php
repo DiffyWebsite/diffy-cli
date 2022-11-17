@@ -57,6 +57,54 @@ class ScreenshotCommand extends Tasks
     }
 
     /**
+     * Get the list of screenshots
+     *
+     * @command screenshot:list
+     *
+     * @param int $projectId ID of the project
+     *
+     * @param array $options
+     *
+     * @throws \Diffy\InvalidArgumentsException
+     *
+     * @option name Filter by the title of the screenshot
+     * @option limit Number of results to return
+     *
+     * @usage screenshot:list 342 return all the screenshots for the project 32.
+     * @usage screenshot:list 342 --name="feature-branch-5" --limit=1 retrieve details of the last screenshot named "feature-branch-5"
+     * @usage screenshot:list 18765 --limit=1 --name="Demo screenshot staging" | grep \'id\' | php -r 'print(preg_replace("/[^0-9]/", "", stream_get_contents(STDIN)));'
+     *      Extract ID of the latest screenshot with the name "Demo screenshot staging"
+     */
+    public function listScreenshot($projectId, array $options = ['name' => '', 'limit' => 0])
+    {
+        $apiKey = Config::getConfig()['key'];
+
+        Diffy::setApiKey($apiKey);
+        $list = Screenshot::all($projectId);
+
+        $screenshots = $list['screenshotsForDiff'];
+        // Do not include baseline.
+        array_shift($screenshots);
+
+        if (!empty($options['name'])) {
+            $filtered = [];
+            foreach ($screenshots as $screenshot) {
+                if ($screenshot['name'] == $options['name']) {
+                    $filtered[] = $screenshot;
+                }
+            }
+            $screenshots = $filtered;
+        }
+
+        if (!empty($options['limit'])) {
+            $screenshots = array_slice($screenshots, 0, $options['limit']);
+        }
+
+
+        $this->io()->write(var_export($screenshots, TRUE));
+    }
+
+    /**
      * Create a screenshot from uploade images
      *
      * @command screenshot:create-uploaded
