@@ -25,6 +25,9 @@
         "g1a/composer-test-scenarios": "^2",
         "squizlabs/php_codesniffer": "^2.8"
     },
+    "bin": [
+        "diffy"
+    ],
     "scripts": {
         "phar:install-tools": [
             "mkdir -p tools",
