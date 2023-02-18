@@ -51,7 +51,7 @@ You can use `--wait` key to wait for the screenshot to be completed.
 As a result you will get an ID of the screenshot.
 
 ```shell script
-diffy diff:create PROJECT_ID SCREENSHOT_ID1 SCREENSHOT_ID2
+diffy diff:create PROJECT_ID SCREENSHOT_ID1 SCREENSHOT_ID2 --name="custom"
 ```
 
 Compare screenshots with id SCREENSHOT_ID1 and SCREENSHOT_ID2
