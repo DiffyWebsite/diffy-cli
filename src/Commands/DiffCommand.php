@@ -24,6 +24,7 @@ class DiffCommand extends Tasks
      *
      * @option wait Wait for the diff to be completed
      * @option max-wait Maximum number of seconds to wait for the diff to be completed.
+     * @option name Custom diff name
      *
      * @usage diff:create 342 1221 1223
      *   Compare screenshots 1221 and 1223.
@@ -39,11 +40,10 @@ class DiffCommand extends Tasks
         $apiKey = Config::getConfig()['key'];
 
         Diffy::setApiKey($apiKey);
-        $diffId = Diff::create($projectId, $screenshotId1, $screenshotId2);
 
-        if (!empty($options['name'])) {
-            Diff::updateName($diffId, $options['name']);
-        }
+        $name = $options['name'] ?? '';
+
+        $diffId = Diff::create($projectId, $screenshotId1, $screenshotId2, $name);
 
         if (!empty($options['wait']) && $options['wait'] == true) {
             $sleep = 10;

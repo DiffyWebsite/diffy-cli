@@ -54,6 +54,11 @@ As a result you will get an ID of the screenshot.
 diffy diff:create PROJECT_ID SCREENSHOT_ID1 SCREENSHOT_ID2
 ```
 
+Also, you can create diff with custom name:
+```shell script
+diffy diff:create PROJECT_ID SCREENSHOT_ID1 SCREENSHOT_ID2 --name="custom"
+```
+
 Compare screenshots with id SCREENSHOT_ID1 and SCREENSHOT_ID2
 
 ```shell script
