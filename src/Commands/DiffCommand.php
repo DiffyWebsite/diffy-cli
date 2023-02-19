@@ -24,6 +24,7 @@ class DiffCommand extends Tasks
      *
      * @option wait Wait for the diff to be completed
      * @option max-wait Maximum number of seconds to wait for the diff to be completed.
+     * @option name Custom diff name
      *
      * @usage diff:create 342 1221 1223
      *   Compare screenshots 1221 and 1223.
