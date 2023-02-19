@@ -39,11 +39,10 @@ class DiffCommand extends Tasks
         $apiKey = Config::getConfig()['key'];
 
         Diffy::setApiKey($apiKey);
-        $diffId = Diff::create($projectId, $screenshotId1, $screenshotId2);
 
-        if (!empty($options['name'])) {
-            Diff::updateName($diffId, $options['name']);
-        }
+        $name = $options['name'] ?? '';
+
+        $diffId = Diff::create($projectId, $screenshotId1, $screenshotId2, $name);
 
         if (!empty($options['wait']) && $options['wait'] == true) {
             $sleep = 10;
