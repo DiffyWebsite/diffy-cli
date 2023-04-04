@@ -9,6 +9,7 @@ use DiffyCli\Config;
 use GuzzleHttp\Exception\InvalidArgumentException;
 use Robo\Tasks;
 use Symfony\Component\Console\Style\SymfonyStyle;
+
 use function GuzzleHttp\json_decode;
 
 class ProjectCommand extends Tasks
@@ -17,7 +18,7 @@ class ProjectCommand extends Tasks
     protected $io;
 
     /**
-     * Verify the input JSON config.
+     * Verify the input JSON config
      *
      * @param string $configurationPath Path to the json config file.
      *
@@ -47,14 +48,14 @@ class ProjectCommand extends Tasks
     }
 
     /**
-     * Compare environments.
+     * Compare environments
      *
      * @command project:compare
      *
-     * @param int $projectId ID of the project
-     * @param string $env1 First environment to compare
-     * @param string $env2 Second environment to compare
-     * @param array $options
+     * @param int    $projectId ID of the project
+     * @param string $env1      First environment to compare
+     * @param string $env2      Second environment to compare
+     * @param array  $options
      *
      * @throws \Diffy\InvalidArgumentsException
      *
@@ -131,7 +132,7 @@ class ProjectCommand extends Tasks
      *
      * @command project:update
      *
-     * @param int $projectId Id of the project.
+     * @param int    $projectId         Id of the project.
      * @param string $configurationPath Path to the json config file.
      *
      * @usage project:update 342 ./examples/diffy_update_project.json
@@ -143,11 +144,11 @@ class ProjectCommand extends Tasks
     {
         Project::update($projectId, $this->isValidJsonConfig($configurationPath));
 
-        $this->getIO()->writeln('Project <info>' . $projectId . '</info> updated.' );
+        $this->getIO()->writeln('Project <info>' . $projectId . '</info> updated.');
     }
 
     /**
-     * Update multiple projects configurations by one json config file.
+     * Update multiple projects configurations by one json config file
      *
      * @command projects:update
      *
@@ -166,7 +167,7 @@ class ProjectCommand extends Tasks
             if (is_array($projectConfig)) {
                 Project::update($projectId, $projectConfig);
 
-                $this->getIO()->writeln('Project <info>' . $projectId . '</info> updated.' );
+                $this->getIO()->writeln('Project <info>' . $projectId . '</info> updated.');
             }
         }
     }
@@ -191,12 +192,12 @@ class ProjectCommand extends Tasks
         if (!empty($configuration[0]) && is_array($configuration[0]) && !empty($configuration[0]['urls'])) {
             foreach ($configuration as $project_config) {
                 $project_id = Project::createFromData($project_config);
-                $this->getIO()->writeln('[<info>' . $project_id . '</info>] <comment>'. $project_config['name'] . '</comment> created.');
+                $this->getIO()->writeln('[<info>' . $project_id . '</info>] <comment>' . $project_config['name'] . '</comment> created.');
             }
         } else {
             // Single project.
             $project_id = Project::createFromData($configuration);
-            $this->getIO()->writeln('[<info>' . $project_id . '</info>] <comment>'. $configuration['name'] . '</comment> created.');
+            $this->getIO()->writeln('[<info>' . $project_id . '</info>] <comment>' . $configuration['name'] . '</comment> created.');
         }
     }
 

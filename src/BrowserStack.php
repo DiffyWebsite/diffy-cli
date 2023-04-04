@@ -10,7 +10,7 @@ class BrowserStack
 
     private $password;
 
-    private $browserStackURL = "https://www.browserstack.com/";
+    private $browserStackURL = 'https://www.browserstack.com/';
 
     private $quality;
 
@@ -47,9 +47,9 @@ class BrowserStack
     /**
      * Create screenshot job.
      *
-     * @param $url
-     * @param array $browsers
-     * @param int $waitTime
+     * @param  $url
+     * @param  array $browsers
+     * @param  int   $waitTime
      * @return mixed
      */
     public function createScreenshot($url, array $browsers, int $waitTime = 5)
@@ -76,11 +76,10 @@ class BrowserStack
         return $this->query('', 'POST', $params);
     }
 
-
     /**
      * Get job results: list of screenshots.
      *
-     * @param $jobId
+     * @param  $jobId
      * @return array
      * @throws \Exception
      */
@@ -89,38 +88,35 @@ class BrowserStack
         $result = $this->query($jobId, 'GET');
 
         if (!isset($result['state'])) {
-            throw new \Exception('Bad response: '.var_export($result, true));
+            throw new \Exception('Bad response: ' . var_export($result, true));
         }
 
         switch ($result['state']) {
             case 'queue':
             case 'queued_all':
                 return ['status' => false, 'data' => $result];
-                break;
-
             case 'done':
                 return ['status' => true, 'data' => $result];
-                break;
             default:
-                throw new \Exception('Undefined state: '.$result['state']);
+                throw new \Exception('Undefined state: ' . $result['state']);
         }
     }
 
     /**
      * Run query to BrowserStack server.
      *
-     * @param string $methodName
-     * @param string $requestVerb
-     * @param array $body
+     * @param  string $methodName
+     * @param  string $requestVerb
+     * @param  array  $body
      * @return mixed
      */
     public function query(string $methodName, string $requestVerb, array $body = [])
     {
-        $uri = (!empty($methodName)) ? 'screenshots/' . $methodName.'.json' : 'screenshots';
+        $uri = (!empty($methodName)) ? 'screenshots/' . $methodName . '.json' : 'screenshots';
 
-        if ($requestVerb == 'GET') {
+        if ($requestVerb === 'GET') {
             if (!empty($body)) {
-                $uri .= '?'.http_build_query($body);
+                $uri .= '?' . http_build_query($body);
             }
         } else {
             $body = ['json' => $body];

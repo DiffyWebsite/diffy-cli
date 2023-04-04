@@ -18,7 +18,7 @@ class LambdaTest
 
     private $password;
 
-    private $lambdaTestURL = "https://api.lambdatest.com/screenshots/v1/";
+    private $lambdaTestURL = 'https://api.lambdatest.com/screenshots/v1/';
 
     private $quality;
 
@@ -55,9 +55,9 @@ class LambdaTest
     /**
      * Create screenshot job.
      *
-     * @param $url
-     * @param array $browsers
-     * @param int $waitTime
+     * @param  $url
+     * @param  array $browsers
+     * @param  int   $waitTime
      * @return mixed
      */
     public function createScreenshot($url, array $browsers, int $waitTime = 5)
@@ -66,7 +66,7 @@ class LambdaTest
             'configs' => $browsers,
             'url' => $url,
             'defer_time' => $waitTime,
-            'email' => FALSE,
+            'email' => false,
             'mac_res' => '1024x768',
             'win_res' => '1366X768',
             'smart_scroll' => true,
@@ -76,11 +76,10 @@ class LambdaTest
         return $this->query('', 'POST', $params);
     }
 
-
     /**
      * Get job results: list of screenshots.
      *
-     * @param $jobId
+     * @param  $jobId
      * @return array
      * @throws \Exception
      */
@@ -89,18 +88,15 @@ class LambdaTest
         $result = $this->query($jobId, 'GET');
 
         if (!isset($result['test_status'])) {
-            throw new \Exception('Bad response: '.var_export($result, true));
+            throw new \Exception('Bad response: ' . var_export($result, true));
         }
 
         switch ($result['test_status']) {
             case 'initiated':
             case 'started':
                 return ['status' => false, 'data' => $result];
-                break;
-
             case 'completed':
                 return ['status' => true, 'data' => $result];
-                break;
             default:
                 throw new \Exception('Undefined state: ' . $result['test_status']);
         }
@@ -109,9 +105,9 @@ class LambdaTest
     /**
      * Run query to LambdaTest server.
      *
-     * @param string $methodName
-     * @param string $requestVerb
-     * @param array $body
+     * @param  string $methodName
+     * @param  string $requestVerb
+     * @param  array  $body
      * @return mixed
      */
     public function query(string $methodName, string $requestVerb, array $body = [])
@@ -120,7 +116,7 @@ class LambdaTest
 
         if ($requestVerb == 'GET') {
             if (!empty($body)) {
-                $uri .= '?'.http_build_query($body);
+                $uri .= '?' . http_build_query($body);
             }
         } else {
             $body = ['json' => $body];

@@ -7,6 +7,7 @@ use Diffy\Screenshot;
 use DiffyCli\Config;
 use GuzzleHttp\Exception\InvalidArgumentException;
 use Robo\Tasks;
+
 use function GuzzleHttp\json_decode;
 
 class ScreenshotCommand extends Tasks
@@ -16,10 +17,10 @@ class ScreenshotCommand extends Tasks
      *
      * @command screenshot:create
      *
-     * @param int $projectId ID of the project
+     * @param int    $projectId   ID of the project
      * @param string $environment Environment of the project. Can be one of "production", "staging", "development", "custom"
      *
-     * @param array $options
+     * @param array  $options
      *
      * @throws \Diffy\InvalidArgumentsException
      *
@@ -61,7 +62,7 @@ class ScreenshotCommand extends Tasks
      *
      * @command screenshot:list
      *
-     * @param int $projectId ID of the project
+     * @param int   $projectId ID of the project
      *
      * @param array $options
      *
@@ -100,8 +101,7 @@ class ScreenshotCommand extends Tasks
             $screenshots = array_slice($screenshots, 0, $options['limit']);
         }
 
-
-        $this->io()->write(var_export($screenshots, TRUE));
+        $this->io()->write(var_export($screenshots, true));
     }
 
     /**
@@ -109,9 +109,9 @@ class ScreenshotCommand extends Tasks
      *
      * @command screenshot:create-uploaded
      *
-     * @param int $projectId ID of the project
+     * @param int    $projectId         ID of the project
      * @param string $configurationPath Path to the json config file.
-     *   Json encoded array of snapshotName and arrays "files", "breakpoints", "urls".
+     *                                  Json encoded array of snapshotName and arrays "files", "breakpoints", "urls".
      *
      * @usage screenshot:create-uploaded 342 ./diffy_create_screenshot_upload.json
      */

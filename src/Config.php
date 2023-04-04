@@ -9,12 +9,12 @@ class Config
     /**
      * Save API Key to configuration file.
      *
-     * @param $key
+     * @param  $key
      * @throws \Exception
      */
     public static function saveApiKey($key)
     {
-        $config = self::getConfig(FALSE);
+        $config = self::getConfig(false);
         $config['key'] = $key;
         self::saveConfig($config);
     }
@@ -22,8 +22,8 @@ class Config
     /**
      * Save Browserstack credentials.
      *
-     * @param $username
-     * @param $accessKey
+     * @param  $username
+     * @param  $accessKey
      * @throws \Exception
      */
     public static function saveBrowserstackCredentials($username, $accessKey)
@@ -37,8 +37,8 @@ class Config
     /**
      * Save Lambdatest credentials.
      *
-     * @param $username
-     * @param $accessToken
+     * @param  $username
+     * @param  $accessToken
      * @throws \Exception
      */
     public static function saveLambdatestCredentials($username, $accessToken)
@@ -52,7 +52,7 @@ class Config
     /**
      * Save configuration file.
      *
-     * @param $config
+     * @param  $config
      * @throws \Exception
      */
     public static function saveConfig($config)
@@ -81,7 +81,7 @@ class Config
      * @return mixed
      * @throws \Exception
      */
-    public static function getConfig($should_exist = TRUE)
+    public static function getConfig($should_exist = true)
     {
         $configPrefix = 'DIFFYCLI';
         $configFilePath = getenv($configPrefix . '_CONFIG') ?: getenv('HOME') . '/.diffy-cli/diffy-cli.yaml';
