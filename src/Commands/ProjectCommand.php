@@ -101,6 +101,22 @@ class ProjectCommand extends Tasks
             $params['commitSha'] = $options['commit-sha'];
         }
 
+        if ($params['env1'] === 'production') {
+            $params['env1'] = 'prod';
+        } elseif ($params['env1'] === 'development') {
+            $params['env1'] = 'dev';
+        } elseif ($params['env1'] === 'staging') {
+            $params['env1'] = 'stage';
+        }
+
+        if ($params['env2'] === 'production') {
+            $params['env2'] = 'prod';
+        } elseif ($params['env2'] === 'development') {
+            $params['env2'] = 'dev';
+        } elseif ($params['env2'] === 'staging') {
+            $params['env2'] = 'stage';
+        }
+
         $diffId = Project::compare($projectId, $params);
 
         if (!empty($options['name'])) {

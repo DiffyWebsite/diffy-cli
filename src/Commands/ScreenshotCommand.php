@@ -34,6 +34,15 @@ class ScreenshotCommand extends Tasks
         $apiKey = Config::getConfig()['key'];
 
         Diffy::setApiKey($apiKey);
+
+        if ($environment === 'prod') {
+            $environment = 'production';
+        } elseif ($environment === 'dev') {
+            $environment = 'development';
+        } elseif ($environment === 'stage') {
+            $environment = 'staging';
+        }
+
         $screenshotId = Screenshot::create($projectId, $environment);
 
         if (!empty($options['wait']) && $options['wait'] == true) {
