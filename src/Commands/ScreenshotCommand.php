@@ -18,7 +18,7 @@ class ScreenshotCommand extends Tasks
      * @command screenshot:create
      *
      * @param int    $projectId   ID of the project
-     * @param string $environment Environment of the project. Can be one of "production", "staging", "development", "custom"
+     * @param string $environment Environment of the project. Can be one of "production", "staging", "development", "custom" (short options: "prod", "stage", "dev")
      *
      * @param array  $options
      *
@@ -35,6 +35,15 @@ class ScreenshotCommand extends Tasks
         $apiKey = Config::getConfig()['key'];
 
         Diffy::setApiKey($apiKey);
+
+        if ($environment === 'prod') {
+            $environment = 'production';
+        } elseif ($environment === 'dev') {
+            $environment = 'development';
+        } elseif ($environment === 'stage') {
+            $environment = 'staging';
+        }
+
         $screenshotId = Screenshot::create($projectId, $environment);
 
         if (!empty($options['wait']) && $options['wait'] == true) {
