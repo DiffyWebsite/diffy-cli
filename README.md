@@ -54,6 +54,11 @@ As a result you will get an ID of the screenshot.
 diffy diff:create PROJECT_ID SCREENSHOT_ID1 SCREENSHOT_ID2
 ```
 
+Also, you can create diff with custom name:
+```shell script
+diffy diff:create PROJECT_ID SCREENSHOT_ID1 SCREENSHOT_ID2 --name="custom"
+```
+
 Compare screenshots with id SCREENSHOT_ID1 and SCREENSHOT_ID2
 
 ```shell script
@@ -111,6 +116,14 @@ diffy diff:list PROJECT_ID PAGE_NUMBER
 ```
 PROJECT_ID is an ID of the project. You can get it from URL of your project.
 PAGE_NUMBER is number of the page results (starts from 0)
+
+#### Baseline
+
+There are two commands available to work with baseline set
+```shell script
+diffy screenshot:create-baseline PROJECT_ID ENVIRONMENT --wait # will create set of screenshots and set them as baseline right away
+diffy screenshot:set-baseline PROJECT_ID SCREENSHOT_ID # set screenshots SCREENSHOT_ID as a baseline
+```
 
 #### Create screenshots from images
 

@@ -6,6 +6,7 @@ use Diffy\Diff;
 use Diffy\Diffy;
 use Diffy\InvalidArgumentsException;
 use DiffyCli\Config;
+use N98\JUnitXml\Document;
 use Robo\Tasks;
 
 class DiffCommand extends Tasks
@@ -15,15 +16,16 @@ class DiffCommand extends Tasks
      *
      * @command diff:create
      *
-     * @param int $projectId ID of the project
-     * @param int $screenshotId1 ID of the first screenshot to compare
-     * @param int $screenshotId2 ID of the second screenshot to compare
+     * @param int   $projectId     ID of the project
+     * @param int   $screenshotId1 ID of the first screenshot to compare
+     * @param int   $screenshotId2 ID of the second screenshot to compare
      * @param array $options
      *
      * @throws InvalidArgumentsException
      *
      * @option wait Wait for the diff to be completed
      * @option max-wait Maximum number of seconds to wait for the diff to be completed.
+     * @option name Custom diff name
      *
      * @usage diff:create 342 1221 1223
      *   Compare screenshots 1221 and 1223.
@@ -39,11 +41,10 @@ class DiffCommand extends Tasks
         $apiKey = Config::getConfig()['key'];
 
         Diffy::setApiKey($apiKey);
-        $diffId = Diff::create($projectId, $screenshotId1, $screenshotId2);
 
-        if (!empty($options['name'])) {
-            Diff::updateName($diffId, $options['name']);
-        }
+        $name = $options['name'] ?? '';
+
+        $diffId = Diff::create($projectId, $screenshotId1, $screenshotId2, $name);
 
         if (!empty($options['wait']) && $options['wait'] == true) {
             $sleep = 10;
@@ -66,7 +67,7 @@ class DiffCommand extends Tasks
     }
 
     /**
-     * Get diff status.
+     * Get diff status
      *
      * @command diff:get-status
      *
@@ -88,7 +89,7 @@ class DiffCommand extends Tasks
     }
 
     /**
-     * Get diff status.
+     * Get diff changes percentage
      *
      * @command diff:get-changes-percent
      *
@@ -110,7 +111,97 @@ class DiffCommand extends Tasks
     }
 
     /**
-     * Get diff status.
+     * Get diff result
+     *
+     * @command diff:get-result
+     *
+     * @param int $diffId
+     *
+     * @option format Format of the output (supported: junit-xml)
+     *
+     * @return mixed
+     *
+     * @throws \Exception
+     *
+     * @usage diff:get-result 12345 --format=junit-xml Get diff result.
+     */
+    public function getDiffResult(int $diffId, array $options = ['format' => '']): void
+    {
+        $format = $options['format'] ?? '';
+
+        if (!$format) {
+            $this->io()->error('Provide --format="value" option');
+            return;
+        } elseif (!in_array($format, ['junit-xml'])) {
+            $this->io()->error('Format value is not supported. Provide one of the following values: junit-xml.');
+            return;
+        }
+
+        if ($format === 'junit-xml' && !extension_loaded('dom')) {
+            $this->io()->error('PHP dom extension not loaded');
+            return;
+        }
+
+        $apiKey = Config::getConfig()['key'];
+        Diffy::setApiKey($apiKey);
+        $diff = Diff::retrieve($diffId);
+
+        if (!in_array($diff->data['state'], [2, 3, 4])) {
+            $this->io()->error('Diff is not completed. Retry later.');
+            return;
+        }
+
+        $document = new Document();
+
+        /** @var \DOMElement $rootElement */
+        $rootElement = $document->childNodes[0];
+        $rootElement->setAttribute('name', $diff->data['name']);
+
+        $generalFailures = 0;
+        $generalTotal = 0;
+        $i = 0;
+
+        foreach ($diff->data['diffs'] as $url => $breakpoints) {
+            $suite = $document->addTestSuite();
+            $suite->setName($url);
+
+            $failures = 0;
+
+            foreach ($breakpoints as $breakpoint => $item) {
+                $testCase = $suite->addTestCase();
+                $testCase->setAttribute('classname', 'report');
+                $testCase->setAttribute('name', 'Device size: ' . $breakpoint);
+                $testCase->setAttribute('file', $diff->data['diffSharedUrl'] . '/single/' . $i . '/' . $breakpoint);
+
+                $percentageChanges = $item['percentageChanges'] ?? 0;
+
+                if ($percentageChanges) {
+                    $failures++;
+
+                    $testCase->addFailure($percentageChanges . '% of the page contains changes', 'error');
+                }
+            }
+
+            $suite->setAttribute('tests', count($breakpoints));
+            $suite->setAttribute('failures', $failures);
+            $suite->setAttribute('errors', 0);
+            $suite->setAttribute('skipped', 0);
+
+            $generalTotal += count($breakpoints);
+            $generalFailures += $failures;
+            $i++;
+        }
+
+        $rootElement->setAttribute('tests', $generalTotal);
+        $rootElement->setAttribute('failures', $generalFailures);
+        $rootElement->setAttribute('errors', 0);
+        $rootElement->setAttribute('skipped', 0);
+
+        $this->io()->write($document->saveXML());
+    }
+
+    /**
+     * Get diffs list
      *
      * @command diff:list
      *

@@ -15,6 +15,7 @@ use Robo\Tasks;
  * Integration with lambdatest.com.
  *
  * Class LambdaTestCommand
+ *
  * @package DiffyCli\Commands
  */
 class LambdaTestCommand extends Tasks
@@ -27,11 +28,11 @@ class LambdaTestCommand extends Tasks
     protected $lambdaTestWaitValues = [2, 5, 10, 15, 20, 60];
 
     /**
-     * Save Lambda credentials.
+     * Save LambdaTest credentials
      *
      * @command lambdatest:save-credentials
      *
-     * @param string $username You Lambdatest username. Obtain your username at https://accounts.lambdatest.com/detail/profile
+     * @param string $username    You Lambdatest username. Obtain your username at https://accounts.lambdatest.com/detail/profile
      * @param string $accessToken Your Lambdatest Access Token. Obtain your key at https://accounts.lambdatest.com/detail/profile
      *
      * @usage lambdatest:save-credentials <username> <access_token> Saves the username <username> and access Key <access_token> to configuration for future use.
@@ -41,11 +42,11 @@ class LambdaTestCommand extends Tasks
     public function saveLambdaTestCredentials($username, $accessToken)
     {
         Config::saveLambdaTestCredentials($username, $accessToken);
-        $this->io()->success("LambdaTest username and access token saved");
+        $this->io()->success('LambdaTest username and access token saved');
     }
 
     /**
-     * Get lambdatest browsers key list.
+     * Get LambdaTest browsers key list
      *
      * @command lambdatest:browsers-list
      *
@@ -70,14 +71,14 @@ class LambdaTestCommand extends Tasks
     }
 
     /**
-     * Create screenshots via lambdatest and upload them to Diffy.
+     * Create screenshots via LambdaTest and upload them to Diffy
      *
      * @command lambdatest:screenshot
      *
-     * @param int $projectId ID of the project
-     * @param string $baseUrl Site base url
+     * @param int    $projectId      ID of the project
+     * @param string $baseUrl        Site base url
      * @param string $lambdaTestKeys lambdatest keys: (windows__10--opera--75,windows__10--chrome--90,macos__big__sur--firefox--87,)
-     * @param array $options
+     * @param array  $options
      *
      * @throws InvalidArgumentsException
      *
@@ -93,7 +94,7 @@ class LambdaTestCommand extends Tasks
         $waitTime = (int)$options['wait'];
 
         if (!in_array($waitTime, $this->lambdaTestWaitValues)) {
-            throw new Exception('--wait option should be one of '.implode(', ', $this->lambdaTestWaitValues));
+            throw new Exception('--wait option should be one of ' . implode(', ', $this->lambdaTestWaitValues));
         }
 
         $this->login();
@@ -102,7 +103,7 @@ class LambdaTestCommand extends Tasks
         $this->io()->writeln("Diffy project ID: $projectId");
         $this->io()->writeln("Base url: $baseUrl");
 
-        $this->io()->writeln("lambdatestKeys:");
+        $this->io()->writeln('lambdatestKeys:');
         foreach ($lambdaTestKeys as $key) {
             $this->io()->writeln("  $key");
         }
@@ -123,7 +124,7 @@ class LambdaTestCommand extends Tasks
         );
 
         $this->io()->newLine();
-        $this->io()->title("Start processing ".count($urls)." URLs");
+        $this->io()->title('Start processing ' . count($urls) . ' URLs');
         // Start screenshots.
         $screenshotResults = [];
 
@@ -147,7 +148,7 @@ class LambdaTestCommand extends Tasks
                     $imageUrl = str_replace('.comprod/', '.com/prod/', $value['screenshot_url']);
                     $lambdaTestKey = $this->prepareLambdaTestKey($value['os'], $value['browser'], $value['browser_version']);
                     $uri = str_replace($baseUrl, '', $url);
-                    $uri = '/'.ltrim($uri, '/');
+                    $uri = '/' . ltrim($uri, '/');
 
                     list($width, $height) = explode('x', $value['resolution']);
                     $screenshotResults[] = [
@@ -188,12 +189,12 @@ class LambdaTestCommand extends Tasks
 
         $this->io()->title('Start uploading data to Diffy.');
         $screenshotId = Screenshot::createBrowserStackScreenshot($projectId, $screenshotResults);
-        $screenshotLink = rtrim(Diffy::$uiBaseUrl, '/').'/snapshots/'.$screenshotId;
-        $this->io()->success("Screenshot was successfully created. Screenshot: ".$screenshotLink);
+        $screenshotLink = rtrim(Diffy::$uiBaseUrl, '/') . '/snapshots/' . $screenshotId;
+        $this->io()->success('Screenshot was successfully created. Screenshot: ' . $screenshotLink);
     }
 
     /**
-     * Login to lambdatest.
+     * Login to LambdaTest
      *
      * @throws Exception
      */
@@ -201,8 +202,10 @@ class LambdaTestCommand extends Tasks
     {
         $config = Config::getConfig();
 
-        if (!isset($config['lambdaTestUsername']) || !isset($config['lambdaTestAccessToken']) ||
-            empty($config['lambdaTestUsername']) || empty($config['lambdaTestAccessToken'])) {
+        if (
+            !isset($config['lambdaTestUsername']) || !isset($config['lambdaTestAccessToken'])
+            || empty($config['lambdaTestUsername']) || empty($config['lambdaTestAccessToken'])
+        ) {
             throw new Exception('lambdatest credentials are empty. Use command diffy `lambdatest:save-credentials <username> <access_token>` for add credentials.');
         }
 
@@ -210,7 +213,7 @@ class LambdaTestCommand extends Tasks
     }
 
     /**
-     * Getting screenshot results from lambdatest.
+     * Getting screenshot results from LambdaTest
      *
      * @param $screenshotJobId
      * @param $progress
@@ -241,7 +244,7 @@ class LambdaTestCommand extends Tasks
     }
 
     /**
-     * Get LambdaTest query params from LambdaTest key.
+     * Get LambdaTest query params from LambdaTest key
      *
      * @param array $lambdaTestKeys
      *
@@ -252,7 +255,7 @@ class LambdaTestCommand extends Tasks
         $browsers = [];
 
         foreach ($lambdaTestKeys as $lambdaTestKey) {
-            $params = explode("--", $lambdaTestKey);
+            $params = explode('--', $lambdaTestKey);
             $os = str_replace('__', ' ', $params[0]);
             $browser = str_replace('__', ' ', $params[1]);
             $browserVersion = str_replace('__', ' ', $params[2]);
@@ -270,7 +273,7 @@ class LambdaTestCommand extends Tasks
     }
 
     /**
-     * Create LambdaTest key from LambdaTest browser params.
+     * Create LambdaTest key from LambdaTest browser params
      *
      * @param $os
      * @param $browserName
