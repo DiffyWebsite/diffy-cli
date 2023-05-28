@@ -44,7 +44,7 @@ diffy screenshot:create PROJECT_ID ENVIRONMENT
 ```
 
 PROJECT_ID is an ID of the project. You can get it from URL of your project.
-ENVIRONMENT is one of "production", "staging", "development", "prod", "stage", "dev"
+ENVIRONMENT is one of "production", "staging", "development" (short options: "prod", "stage", "dev")
 
 You can use `--wait` key to wait for the screenshot to be completed.
 
@@ -72,7 +72,7 @@ or in case of custom environment with basic auth credentials
 diffy project:compare PROJECT_ID prod custom --env2Url="https://custom.example.com" --env2User="user" --env2Pass="password"
 ```
 
-Allowed environments are: prod, stage, dev, custom.
+Allowed environments are: prod, stage, dev, custom (long options: "production", "staging", "development").
 
 #### Update project(s)
 
