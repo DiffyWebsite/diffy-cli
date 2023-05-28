@@ -44,7 +44,7 @@ diffy screenshot:create PROJECT_ID ENVIRONMENT
 ```
 
 PROJECT_ID is an ID of the project. You can get it from URL of your project.
-ENVIRONMENT is one of "production", "staging", "development"
+ENVIRONMENT is one of "production", "staging", "development", "prod", "stage", "dev"
 
 You can use `--wait` key to wait for the screenshot to be completed.
 

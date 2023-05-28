@@ -17,7 +17,7 @@ class ScreenshotCommand extends Tasks
      * @command screenshot:create
      *
      * @param int $projectId ID of the project
-     * @param string $environment Environment of the project. Can be one of "production", "staging", "development", "custom"
+     * @param string $environment Environment of the project. Can be one of "production", "staging", "development", "custom", "prod", "stage", "dev"
      *
      * @param array $options
      *
