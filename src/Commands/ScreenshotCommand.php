@@ -176,7 +176,7 @@ class ScreenshotCommand extends Tasks
     /**
      * Sets a new baseline from a screenshot ID.
      *
-     * @command screenshot:create-baseline
+     * @command screenshot:set-baseline
      *
      * @param int $projectId ID of the project
      * @param int $screenshotId The screenshot ID to be the baseline.
