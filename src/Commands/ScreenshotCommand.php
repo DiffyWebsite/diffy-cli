@@ -190,15 +190,6 @@ class ScreenshotCommand extends Tasks
         Diffy::setApiKey($apiKey);
 
         Screenshot::setBaselineSet($projectId, $screenshotId);
-        $this->getIO()->writeln('Baseline for project <info>' . $projectId . '</info> has been updated.');
-    }
-
-    protected function getIO(): SymfonyStyle
-    {
-        if (!$this->io) {
-            $this->io = new SymfonyStyle($this->input(), $this->output());
-        }
-
-        return $this->io;
+        $this->io()->write(sprintf('Baseline for project %d has been updated.', $projectId));
     }
 }
