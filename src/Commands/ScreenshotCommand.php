@@ -183,8 +183,13 @@ class ScreenshotCommand extends Tasks
      *
      * @usage screenshot:set-baseline 342 4325 Set the baseline for project to be screenshot ID.
      */
-    public function setScreenshotBaseline($projectId, $screenshotId) {
+    public function setScreenshotBaseline($projectId, $screenshotId)
+    {
+        $apiKey = Config::getConfig()['key'];
+
+        Diffy::setApiKey($apiKey);
+
         Screenshot::setBaselineSet($projectId, $screenshotId);
-        $this->getIO()->writeln('Baseline for project <info>' . $projectId . '</info> has been updated.' );
+        $this->io()->write(sprintf('Baseline for project %d has been updated.', $projectId));
     }
 }
