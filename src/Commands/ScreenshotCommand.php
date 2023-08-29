@@ -26,11 +26,13 @@ class ScreenshotCommand extends Tasks
      *
      * @option wait Wait for the screenshot to be completed
      * @option max-wait Maximum number of seconds to wait for the screenshot to be completed.
+     * @option envUrl URL of the custom environment.
      *
      * @usage screenshot:create 342 production Take screenshot from production on project 342.
      * @usage screenshot:create 342 production --wait Take the screenshot and wait till they are completed.
+     * @usage screenshot:create 342 custom --envUrl="" Take the screenshot and wait till they are completed.
      */
-    public function createScreenshot($projectId, $environment, array $options = ['wait' => false, 'max-wait' => 1200])
+    public function createScreenshot($projectId, $environment, array $options = ['wait' => false, 'max-wait' => 1200, 'envUrl' => ''])
     {
         $apiKey = Config::getConfig()['key'];
 
@@ -44,7 +46,20 @@ class ScreenshotCommand extends Tasks
             $environment = 'staging';
         }
 
-        $screenshotId = Screenshot::create($projectId, $environment);
+        if ($environment != 'custom') {
+            $screenshotId = Screenshot::create($projectId, $environment);
+        }
+        else {
+            if (empty($options['envUrl'])) {
+                $this->io()->write('You need to provide envUrl option if you create screenshots from "custom" environment');
+                throw new InvalidArgumentException();
+            }
+
+            $optionsCreate = [
+                'baseUrl' => $options['envUrl']
+            ];
+            $screenshotId = Screenshot::create($projectId, $environment, $optionsCreate);
+        }
 
         if (!empty($options['wait']) && $options['wait'] == true) {
             $sleep = 10;
