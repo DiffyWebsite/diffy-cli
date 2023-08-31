@@ -79,6 +79,8 @@ class ScreenshotCommand extends Tasks
         }
 
         $this->io()->write($screenshotId);
+
+        return $screenshotId;
     }
 
     /**
@@ -184,8 +186,12 @@ class ScreenshotCommand extends Tasks
      */
     public function createScreenshotBaseline($projectId, $environment, array $options = ['wait' => false, 'max-wait' => 1200])
     {
+        $apiKey = Config::getConfig()['key'];
+
+        Diffy::setApiKey($apiKey);
+
         $screenshotId = $this->createScreenshot($projectId, $environment, $options);
-        $this->setBaselineSet($projectId, $screenshotId);
+        Screenshot::setBaselineSet($projectId, $screenshotId);
     }
 
     /**
