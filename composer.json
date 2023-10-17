@@ -17,13 +17,12 @@
     "require": {
         "php": "^7.4 || ^8.0",
         "ext-json": "*",
-        "consolidation/robo": "^3",
-        "diffywebsite/diffy-php": "1.x-dev",
-        "guzzlehttp/guzzle": "^6.5",
+        "consolidation/robo": "^4",
+        "diffywebsite/diffy-php": "^1",
+        "guzzlehttp/guzzle": "^7",
         "n98/junit-xml": "^1.1"
     },
     "require-dev": {
-        "php-http/guzzle6-adapter": "^1.1",
         "g1a/composer-test-scenarios": "^2",
         "squizlabs/php_codesniffer": "^3.7"
     },
