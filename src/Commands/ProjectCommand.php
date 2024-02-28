@@ -4,7 +4,9 @@ namespace DiffyCli\Commands;
 
 use Diffy\Diff;
 use Diffy\Diffy;
+use Diffy\InvalidArgumentsException;
 use Diffy\Project;
+use Diffy\Screenshot;
 use DiffyCli\Config;
 use GuzzleHttp\Exception\InvalidArgumentException;
 use Robo\Tasks;
@@ -57,7 +59,7 @@ class ProjectCommand extends Tasks
      * @param string $env2      Second environment to compare
      * @param array  $options
      *
-     * @throws \Diffy\InvalidArgumentsException
+     * @throws InvalidArgumentsException
      *
      * @option env1Url Url of the first environment if custom environment
      * @option env1User Basic auth user for env1Url
@@ -81,8 +83,9 @@ class ProjectCommand extends Tasks
         string $env1,
         string $env2,
         array $options = [
-            'wait' => false, 'max-wait' => 1200, 'commit-sha' => null, 'env1Url' => '', 'env1User' => null, 'env1Pass' => null,
-            'env2Url' => '', 'env2User' => null, 'env2Pass' => null, 'name' => ''
+            'wait' => false, 'max-wait' => 1200, 'commit-sha' => null, 'env1Url' => '', 'env1User' => null,
+            'env1Pass' => null, 'env2Url' => '', 'env2User' => null, 'env2Pass' => null, 'name' => '',
+            'screenshot1' => null, 'screenshot2' => null,
         ]
     ) {
         Diffy::setApiKey(Config::getConfig()['key']);
@@ -96,13 +99,29 @@ class ProjectCommand extends Tasks
             'env2Url' => $options['env2Url'],
             'env2User' => $options['env2User'],
             'env2Pass' => $options['env2Pass'],
+            'screenshot1' => $options['screenshot1'],
+            'screenshot2' => $options['screenshot2'],
         ];
 
         if (!empty($options['commit-sha']) && $options['commit-sha']) {
             $params['commitSha'] = $options['commit-sha'];
         }
 
-        $diffId = Project::compare($projectId, $params);
+        if ($env1 === 'existing' || $env2 === 'existing') {
+            if (!empty($options['screenshot1']) && empty($options['screenshot2'])) {
+                $screenshotId = Screenshot::create($projectId, $env2);
+                $diffId = Diff::create($projectId, $options['screenshot1'], $screenshotId, $options['name']);
+            } elseif (empty($options['screenshot1']) && !empty($options['screenshot2'])) {
+                $screenshotId = Screenshot::create($projectId, $env1);
+                $diffId = Diff::create($projectId, $screenshotId, $options['screenshot2'], $options['name']);
+            } elseif (!empty($options['screenshot1']) && !empty($options['screenshot2'])) {
+                $diffId = Diff::create($projectId, $options['screenshot1'], $options['screenshot2'], $options['name']);
+            } else {
+                throw new InvalidArgumentsException('Set screenshot1 or screenshot2 option');
+            }
+        } else {
+            $diffId = Project::compare($projectId, $params);
+        }
 
         if (!empty($options['name'])) {
             Diff::updateName($diffId, $options['name']);
