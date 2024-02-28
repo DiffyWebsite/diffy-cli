@@ -107,6 +107,22 @@ class ProjectCommand extends Tasks
             $params['commitSha'] = $options['commit-sha'];
         }
 
+        if ($params['env1'] === 'production') {
+            $params['env1'] = 'prod';
+        } elseif ($params['env1'] === 'development') {
+            $params['env1'] = 'dev';
+        } elseif ($params['env1'] === 'staging') {
+            $params['env1'] = 'stage';
+        }
+
+        if ($params['env2'] === 'production') {
+            $params['env2'] = 'prod';
+        } elseif ($params['env2'] === 'development') {
+            $params['env2'] = 'dev';
+        } elseif ($params['env2'] === 'staging') {
+            $params['env2'] = 'stage';
+        }
+
         if ($env1 === 'existing' || $env2 === 'existing') {
             if (!empty($options['screenshot1']) && empty($options['screenshot2'])) {
                 $screenshotId = Screenshot::create($projectId, $env2);
@@ -122,6 +138,8 @@ class ProjectCommand extends Tasks
         } else {
             $diffId = Project::compare($projectId, $params);
         }
+
+        $diffId = Project::compare($projectId, $params);
 
         if (!empty($options['name'])) {
             Diff::updateName($diffId, $options['name']);

@@ -18,7 +18,7 @@ class ScreenshotCommand extends Tasks
      * @command screenshot:create
      *
      * @param int    $projectId   ID of the project
-     * @param string $environment Environment of the project. Can be one of "production", "staging", "development", "custom"
+     * @param string $environment Environment of the project. Can be one of "production", "staging", "development", "custom" (short options: "prod", "stage", "dev")
      *
      * @param array  $options
      *
@@ -26,16 +26,40 @@ class ScreenshotCommand extends Tasks
      *
      * @option wait Wait for the screenshot to be completed
      * @option max-wait Maximum number of seconds to wait for the screenshot to be completed.
+     * @option envUrl URL of the custom environment.
      *
      * @usage screenshot:create 342 production Take screenshot from production on project 342.
      * @usage screenshot:create 342 production --wait Take the screenshot and wait till they are completed.
+     * @usage screenshot:create 342 custom --envUrl="" Take the screenshot and wait till they are completed.
      */
-    public function createScreenshot($projectId, $environment, array $options = ['wait' => false, 'max-wait' => 1200])
+    public function createScreenshot($projectId, $environment, array $options = ['wait' => false, 'max-wait' => 1200, 'envUrl' => ''])
     {
         $apiKey = Config::getConfig()['key'];
 
         Diffy::setApiKey($apiKey);
-        $screenshotId = Screenshot::create($projectId, $environment);
+
+        if ($environment === 'prod') {
+            $environment = 'production';
+        } elseif ($environment === 'dev') {
+            $environment = 'development';
+        } elseif ($environment === 'stage') {
+            $environment = 'staging';
+        }
+
+        if ($environment != 'custom') {
+            $screenshotId = Screenshot::create($projectId, $environment);
+        }
+        else {
+            if (empty($options['envUrl'])) {
+                $this->io()->write('You need to provide envUrl option if you create screenshots from "custom" environment');
+                throw new InvalidArgumentException();
+            }
+
+            $optionsCreate = [
+                'baseUrl' => $options['envUrl']
+            ];
+            $screenshotId = Screenshot::create($projectId, $environment, $optionsCreate);
+        }
 
         if (!empty($options['wait']) && $options['wait'] == true) {
             $sleep = 10;
@@ -55,6 +79,8 @@ class ScreenshotCommand extends Tasks
         }
 
         $this->io()->write($screenshotId);
+
+        return $screenshotId;
     }
 
     /**
@@ -160,22 +186,31 @@ class ScreenshotCommand extends Tasks
      */
     public function createScreenshotBaseline($projectId, $environment, array $options = ['wait' => false, 'max-wait' => 1200])
     {
+        $apiKey = Config::getConfig()['key'];
+
+        Diffy::setApiKey($apiKey);
+
         $screenshotId = $this->createScreenshot($projectId, $environment, $options);
-        $this->setBaselineSet($projectId, $screenshotId);
+        Screenshot::setBaselineSet($projectId, $screenshotId);
     }
 
     /**
      * Sets a new baseline from a screenshot ID.
      *
-     * @command screenshot:create-baseline
+     * @command screenshot:set-baseline
      *
      * @param int $projectId ID of the project
      * @param int $screenshotId The screenshot ID to be the baseline.
      *
      * @usage screenshot:set-baseline 342 4325 Set the baseline for project to be screenshot ID.
      */
-    public function setScreenshotBaseline($projectId, $screenshotId) {
+    public function setScreenshotBaseline($projectId, $screenshotId)
+    {
+        $apiKey = Config::getConfig()['key'];
+
+        Diffy::setApiKey($apiKey);
+
         Screenshot::setBaselineSet($projectId, $screenshotId);
-        $this->getIO()->writeln('Baseline for project <info>' . $projectId . '</info> has been updated.' );
+        $this->io()->write(sprintf('Baseline for project %d has been updated.', $projectId));
     }
 }
