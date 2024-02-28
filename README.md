@@ -77,12 +77,13 @@ or in case of custom environment with basic auth credentials
 diffy project:compare PROJECT_ID prod custom --env2Url="https://custom.example.com" --env2User="user" --env2Pass="password"
 ```
 
+or with existing screenshots
+
 ```shell script
 diffy project:compare PROJECT_ID existing existing --screenshot1=100 --screenshot2=101
 ```
 
 Allowed environments are: prod, stage, dev, custom (long options: production, staging, development).
-or with existing screenshots
 
 #### Update project(s)
 
