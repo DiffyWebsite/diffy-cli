@@ -100,9 +100,7 @@ class ProjectCommand extends Tasks
             'env1Pass' => $options['env1Pass'],
             'env2Url' => $options['env2Url'],
             'env2User' => $options['env2User'],
-            'env2Pass' => $options['env2Pass'],
-            'screenshot1' => $options['screenshot1'],
-            'screenshot2' => $options['screenshot2'],
+            'env2Pass' => $options['env2Pass']
         ];
 
         if (!empty($options['commit-sha']) && $options['commit-sha']) {
@@ -126,17 +124,25 @@ class ProjectCommand extends Tasks
         }
 
         if ($env1 === 'existing' || $env2 === 'existing') {
-            if (!empty($options['screenshot1']) && empty($options['screenshot2'])) {
-                $screenshotId = Screenshot::create($projectId, $env2);
-                $diffId = Diff::create($projectId, $options['screenshot1'], $screenshotId, $options['name']);
-            } elseif (empty($options['screenshot1']) && !empty($options['screenshot2'])) {
-                $screenshotId = Screenshot::create($projectId, $env1);
-                $diffId = Diff::create($projectId, $screenshotId, $options['screenshot2'], $options['name']);
-            } elseif (!empty($options['screenshot1']) && !empty($options['screenshot2'])) {
-                $diffId = Diff::create($projectId, $options['screenshot1'], $options['screenshot2'], $options['name']);
-            } else {
-                throw new InvalidArgumentsException('Set screenshot1 or screenshot2 option');
+            if ($env1 === 'existing' && empty($options['screenshot1'])) {
+                throw new InvalidArgumentsException('Set screenshot1 value');
+            } elseif ($env2 === 'existing' && empty($options['screenshot2'])) {
+                throw new InvalidArgumentsException('Set screenshot2 value');
             }
+
+            if ($env1 === 'existing') {
+                $screenshot1 = $options['screenshot1'];
+            } else {
+                $screenshot1 = Screenshot::create($projectId, $env1);
+            }
+
+            if ($env2 === 'existing') {
+                $screenshot2 = $options['screenshot2'];
+            } else {
+                $screenshot2 = Screenshot::create($projectId, $env2);
+            }
+
+            $diffId = Diff::create($projectId, $screenshot1, $screenshot2, $options['name']);
         } else {
             $diffId = Project::compare($projectId, $params);
         }
