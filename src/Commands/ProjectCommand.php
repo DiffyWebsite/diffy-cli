@@ -70,6 +70,8 @@ class ProjectCommand extends Tasks
      * @option wait Wait for the diff to be completed
      * @option max-wait Maximum number of seconds to wait for the diff to be completed.
      * @option commit-sha GitHub commit SHA.
+     * @option screenshot1 First existing screenshot
+     * @option screenshot2 Second existing screenshot
      *
      * @usage project:compare 342 prod stage
      *   Compare production and stage environments.
@@ -138,8 +140,6 @@ class ProjectCommand extends Tasks
         } else {
             $diffId = Project::compare($projectId, $params);
         }
-
-        $diffId = Project::compare($projectId, $params);
 
         if (!empty($options['name'])) {
             Diff::updateName($diffId, $options['name']);
