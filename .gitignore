@@ -1,6 +1,7 @@
 .idea/
 *.phar
 build
+composer.lock
 tools
 vendor/
 .DS_Store
