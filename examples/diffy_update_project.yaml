@@ -3,7 +3,6 @@ breakpoints:
   - 320
   - 1024
   - 1920
-  - 333
 production: https://your-site.com
 staging: https://user:password@staging.your-site.com
 development: https://user:password@dev.your-site.com
