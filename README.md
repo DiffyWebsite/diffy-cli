@@ -97,7 +97,7 @@ If you want to update your config (For example, from CICD)
 ```shell script
 diffy project:update PROJECT_ID ./examples/diffy_update_project.json
 ```
-See the ./examples/diffy_update_project.json file for a valid config file.
+See the ./examples/diffy_update_project.json or ./examples/diffy_update_project.yaml file for a valid config file.
 
 For multiple projects
 ```shell script
