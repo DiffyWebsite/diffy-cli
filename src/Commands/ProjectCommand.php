@@ -189,7 +189,11 @@ class ProjectCommand extends Tasks
      */
     public function updateProject(int $projectId, string $configurationPath)
     {
-        Project::update($projectId, $this->isValidJsonConfig($configurationPath));
+        if (str_ends_with($configurationPath, '.yaml')) {
+            Project::updateYaml($projectId, $this->isValidJsonConfig($configurationPath));
+        } else {
+            Project::update($projectId, $this->isValidJsonConfig($configurationPath));
+        }
 
         $this->getIO()->writeln('Project <info>' . $projectId . '</info> updated.');
     }
