@@ -1,0 +1,49 @@
+basic:
+    name: 'Desk'
+    environments:
+        production: 'https://wordpress.diffy.website'
+        staging: 'http://stage.wordpress.diffy.website'
+        development: ''
+    breakpoints:
+        - 640
+        - 1024
+        - 1200
+    pages:
+        - /
+        - /2019/01
+        - /sample-page
+        - /2019/03/12/hello-world
+        - /category/uncategorized
+        - /2019/03/01/delectus-quia-esse-aut
+    monitoring:
+        days: {  }
+        type: ''
+advanced:
+    mask: ''
+    remove: ''
+    isolate: ''
+    delay: 10
+    scroll: false
+    headers:
+        - { header: user-agent, value: Googlebot-Image/1.0 }
+    cookies: ''
+    custom_js: ''
+    custom_css: ''
+    mock_content: ''
+    login:
+        type: ''
+        click_element: false
+        click_element_selector: ''
+        login_url: ''
+        username: ''
+        password: ''
+        username_selector: ''
+        password_selector: ''
+        submit_selector: ''
+        after_login_selector: ''
+    performance:
+        workers_production: 30
+        workers_nonproduction: 10
+        workers_production_delay: 0
+        workers_nonproduction_delay: 0
+    stabilize: false

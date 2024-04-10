@@ -14,8 +14,8 @@ Great for building integrations for your CI/CD tools. Allows scription taking sc
 Download latest release from [https://github.com/DiffyWebsite/diffy-cli/releases](https://github.com/DiffyWebsite/diffy-cli/releases) page. Download just `diffy.phar` file. No need for all the source code. You can copy file to your executables so it is available everywhere.
 
 ```shell script
-chmod a+x diffy.phar
-cp diffy.phar /usr/local/bin/diffy
+wget -O /usr/local/bin/diffy https://github.com/diffywebsite/diffy-cli/releases/latest/download/diffy.phar
+chmod a+x /usr/local/bin/diffy
 ```
 
 ### Installion with Composer
@@ -97,7 +97,7 @@ If you want to update your config (For example, from CICD)
 ```shell script
 diffy project:update PROJECT_ID ./examples/diffy_update_project.json
 ```
-See the ./examples/diffy_update_project.json file for a valid config file.
+See the ./examples/diffy_update_project.json or ./examples/diffy-project-projectID-demo-test-project.yaml file for a valid config file.
 
 For multiple projects
 ```shell script

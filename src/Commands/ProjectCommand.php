@@ -9,10 +9,10 @@ use Diffy\Project;
 use Diffy\Screenshot;
 use DiffyCli\Config;
 use GuzzleHttp\Exception\InvalidArgumentException;
+use GuzzleHttp\Utils;
 use Robo\Tasks;
 use Symfony\Component\Console\Style\SymfonyStyle;
-
-use function GuzzleHttp\json_decode;
+use Symfony\Component\Yaml\Yaml;
 
 class ProjectCommand extends Tasks
 {
@@ -41,7 +41,11 @@ class ProjectCommand extends Tasks
         }
 
         try {
-            return json_decode($configuration, true);
+            if (str_ends_with($configurationPath, '.yaml')) {
+                return Yaml::parse($configuration, true);
+            }
+
+            return Utils::jsonDecode($configuration, true);
         } catch (InvalidArgumentException $exception) {
             $this->getIO()->writeln('<error>Configuration is not valid JSON<error>');
 
@@ -171,21 +175,25 @@ class ProjectCommand extends Tasks
     }
 
     /**
-     * Update single project configuration
+     * Update single project configuration from YAML file
      *
      * @command project:update
      *
      * @param int    $projectId         Id of the project.
-     * @param string $configurationPath Path to the json config file.
+     * @param string $configurationPath Path to the YAML config file.
      *
-     * @usage project:update 342 ./examples/diffy_update_project.json
-     *   Updates given project ID with the diffy config.
+     * @usage project:update 342 ./examples/diffy_update_project.yaml
+     *   Configuration can be downloaded from Project's settings page.
      *
      * @throws InvalidArgumentException
      */
     public function updateProject(int $projectId, string $configurationPath)
     {
-        Project::update($projectId, $this->isValidJsonConfig($configurationPath));
+        if (str_ends_with($configurationPath, '.yaml')) {
+            Project::updateYaml($projectId, $this->isValidJsonConfig($configurationPath));
+        } else {
+            Project::update($projectId, $this->isValidJsonConfig($configurationPath));
+        }
 
         $this->getIO()->writeln('Project <info>' . $projectId . '</info> updated.');
     }
