@@ -175,15 +175,15 @@ class ProjectCommand extends Tasks
     }
 
     /**
-     * Update single project configuration
+     * Update single project configuration from YAML file
      *
      * @command project:update
      *
      * @param int    $projectId         Id of the project.
-     * @param string $configurationPath Path to the json config file.
+     * @param string $configurationPath Path to the YAML config file.
      *
-     * @usage project:update 342 ./examples/diffy_update_project.json
-     *   Updates given project ID with the diffy config.
+     * @usage project:update 342 ./examples/diffy_update_project.yaml
+     *   Configuration can be downloaded from Project's settings page.
      *
      * @throws InvalidArgumentException
      */

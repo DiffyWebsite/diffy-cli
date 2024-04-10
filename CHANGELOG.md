@@ -1,5 +1,9 @@
 # Changelog
 
+### 1.37
+
+* Update project from YAML file
+
 ### 0.1.28
 * Added the diffy screenshot:create-baseline command
 * Added the diffy screenshot:set-baseline command
