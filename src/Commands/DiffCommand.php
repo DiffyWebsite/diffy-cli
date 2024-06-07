@@ -234,7 +234,7 @@ class DiffCommand extends Tasks
                     'state' => Diff::getStateName($diff['state']),
                     'jobs' => $diff['status']['jobs'],
                     'estimate' => ($diff['status']['jobs'] > 0) ? $diff['status']['estimate'] : 'Finished',
-                    'sharedUrl' => $diff['sharedUrl'],
+                    'sharedUrl' => $diff['sharedUrl'] ?? NULL,
                 ];
             }
         }
