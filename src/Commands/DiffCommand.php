@@ -26,25 +26,26 @@ class DiffCommand extends Tasks
      * @option wait Wait for the diff to be completed
      * @option max-wait Maximum number of seconds to wait for the diff to be completed.
      * @option name Custom diff name
+     * @option notifications Send an email notification when the diff is completed
      *
      * @usage diff:create 342 1221 1223
      *   Compare screenshots 1221 and 1223.
      * @usage diff:create --wait --name="custom name" 342 1221 1223
-     *   Compare screenshots 1221 and 1223 and wait for the diff to be completed and set the name for the diff "custom name".
+     *   Compare screenshots 1221 and 1223 and wait for the diff to be completed and set the name for the diff "custom name".]
+     * @usage diff:create 342 1221 1223 --notifications="test@icloud.com,test@gmail.com"
+     *   Compare screenshots 1221 and 1223. When the comparison is completed, send a notification with the comparison to test@icloud.com and test@gmail.com.
      */
     public function createDiff(
         int $projectId,
         int $screenshotId1,
         int $screenshotId2,
-        array $options = ['wait' => false, 'max-wait' => 1200, 'name' => '']
+        array $options = ['wait' => false, 'max-wait' => 1200, 'name' => '', 'notifications' => '']
     ) {
         $apiKey = Config::getConfig()['key'];
 
         Diffy::setApiKey($apiKey);
 
-        $name = $options['name'] ?? '';
-
-        $diffId = Diff::create($projectId, $screenshotId1, $screenshotId2, $name);
+        $diffId = Diff::create($projectId, $screenshotId1, $screenshotId2, $options);
 
         if (!empty($options['wait']) && $options['wait'] == true) {
             $sleep = 10;

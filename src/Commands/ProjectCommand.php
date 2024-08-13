@@ -76,6 +76,7 @@ class ProjectCommand extends Tasks
      * @option commit-sha GitHub commit SHA.
      * @option screenshot1 First existing screenshot
      * @option screenshot2 Second existing screenshot
+     * @option notifications Send an email notification when the diff is completed
      *
      * @usage project:compare 342 prod stage
      *   Compare production and stage environments.
@@ -83,6 +84,8 @@ class ProjectCommand extends Tasks
      *   Compare production environment with https://custom-environment.example.com and set diff name "custom-environment"
      * @usage project:compare custom custom --env1Url="http://site.com" --env2Url="http://site2.com" --commit-sha="29b872765b21387b7adfd67fd16b7f11942e1a56"
      *   Compare http://site.com with http://site2.com with github check by commit-sha.
+     * @usage project:compare 342 prod stage --notifications="test@icloud.com,test@gmail.com"
+     *   Compare production and stage environments. When the comparison is completed, send a notification with the comparison to test@icloud.com and test@gmail.com.
      */
     public function createCompare(
         int $projectId,
@@ -91,7 +94,7 @@ class ProjectCommand extends Tasks
         array $options = [
             'wait' => false, 'max-wait' => 1200, 'commit-sha' => null, 'env1Url' => '', 'env1User' => null,
             'env1Pass' => null, 'env2Url' => '', 'env2User' => null, 'env2Pass' => null, 'name' => '',
-            'screenshot1' => null, 'screenshot2' => null,
+            'screenshot1' => null, 'screenshot2' => null, 'notifications' => '',
         ]
     ) {
         Diffy::setApiKey(Config::getConfig()['key']);
@@ -104,7 +107,8 @@ class ProjectCommand extends Tasks
             'env1Pass' => $options['env1Pass'],
             'env2Url' => $options['env2Url'],
             'env2User' => $options['env2User'],
-            'env2Pass' => $options['env2Pass']
+            'env2Pass' => $options['env2Pass'],
+            'notifications' => $options['notifications'],
         ];
 
         if (!empty($options['commit-sha']) && $options['commit-sha']) {
@@ -146,7 +150,7 @@ class ProjectCommand extends Tasks
                 $screenshot2 = Screenshot::create($projectId, $env2);
             }
 
-            $diffId = Diff::create($projectId, $screenshot1, $screenshot2, $options['name']);
+            $diffId = Diff::create($projectId, $screenshot1, $screenshot2, $options['name'], $options['notifications']);
         } else {
             $diffId = Project::compare($projectId, $params);
         }
