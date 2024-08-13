@@ -150,7 +150,7 @@ class ProjectCommand extends Tasks
                 $screenshot2 = Screenshot::create($projectId, $env2);
             }
 
-            $diffId = Diff::create($projectId, $screenshot1, $screenshot2, $options['name'], $options['notifications']);
+            $diffId = Diff::create($projectId, $screenshot1, $screenshot2, $options);
         } else {
             $diffId = Project::compare($projectId, $params);
         }
