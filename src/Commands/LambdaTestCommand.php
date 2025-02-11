@@ -9,6 +9,7 @@ use Diffy\Project;
 use DiffyCli\Config;
 use DiffyCli\LambdaTest;
 use Exception;
+use Robo\ResultData;
 use Robo\Tasks;
 
 /**
@@ -43,6 +44,9 @@ class LambdaTestCommand extends Tasks
     {
         Config::saveLambdaTestCredentials($username, $accessToken);
         $this->io()->success('LambdaTest username and access token saved');
+
+        // Successful exit.
+        return new ResultData();
     }
 
     /**
@@ -68,6 +72,9 @@ class LambdaTestCommand extends Tasks
         }
 
         $this->io()->table($headers, $rows);
+
+        // Successful exit.
+        return new ResultData();
     }
 
     /**
@@ -191,6 +198,9 @@ class LambdaTestCommand extends Tasks
         $screenshotId = Screenshot::createBrowserStackScreenshot($projectId, $screenshotResults);
         $screenshotLink = rtrim(Diffy::$uiBaseUrl, '/') . '/snapshots/' . $screenshotId;
         $this->io()->success('Screenshot was successfully created. Screenshot: ' . $screenshotLink);
+
+        // Successful exit.
+        return new ResultData();
     }
 
     /**

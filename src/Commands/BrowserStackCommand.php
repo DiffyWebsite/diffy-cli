@@ -9,6 +9,7 @@ use Diffy\Project;
 use DiffyCli\Config;
 use DiffyCli\BrowserStack;
 use Exception;
+use Robo\ResultData;
 use Robo\Tasks;
 
 class BrowserStackCommand extends Tasks
@@ -35,6 +36,9 @@ class BrowserStackCommand extends Tasks
     {
         Config::saveBrowserstackCredentials($username, $accessKey);
         $this->io()->success('Browserstack username and access key saved');
+
+        // Successful exit.
+        return new ResultData();
     }
 
     /**
@@ -63,6 +67,9 @@ class BrowserStackCommand extends Tasks
         }
 
         $this->io()->table($headers, $rows);
+
+        // Successful exit.
+        return new ResultData();
     }
 
     /**
@@ -187,6 +194,9 @@ class BrowserStackCommand extends Tasks
         $screenshotId = Screenshot::createBrowserStackScreenshot($projectId, $screenshotResults);
         $screenshotLink = rtrim(Diffy::$uiBaseUrl, '/') . '/snapshots/' . $screenshotId;
         $this->io()->success('Screenshot was successfully created. Screenshot: ' . $screenshotLink);
+
+        // Successful exit.
+        return new ResultData();
     }
 
     /**

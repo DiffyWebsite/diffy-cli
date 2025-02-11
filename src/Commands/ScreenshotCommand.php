@@ -6,6 +6,7 @@ use Diffy\Diffy;
 use Diffy\Screenshot;
 use DiffyCli\Config;
 use GuzzleHttp\Exception\InvalidArgumentException;
+use Robo\ResultData;
 use Robo\Tasks;
 
 use function GuzzleHttp\json_decode;
@@ -80,7 +81,8 @@ class ScreenshotCommand extends Tasks
 
         $this->io()->write($screenshotId);
 
-        return $screenshotId;
+        // Successful exit.
+        return new ResultData();
     }
 
     /**
@@ -128,6 +130,9 @@ class ScreenshotCommand extends Tasks
         }
 
         $this->io()->write(var_export($screenshots, true));
+
+        // Successful exit.
+        return new ResultData();
     }
 
     /**
@@ -164,6 +169,9 @@ class ScreenshotCommand extends Tasks
         $screenshotId = Screenshot::createUpload($projectId, $configuration);
 
         $this->io()->write($screenshotId);
+
+        // Successful exit.
+        return new ResultData();
     }
 
     /**
@@ -192,6 +200,9 @@ class ScreenshotCommand extends Tasks
 
         $screenshotId = $this->createScreenshot($projectId, $environment, $options);
         Screenshot::setBaselineSet($projectId, $screenshotId);
+
+        // Successful exit.
+        return new ResultData();
     }
 
     /**
@@ -212,5 +223,8 @@ class ScreenshotCommand extends Tasks
 
         Screenshot::setBaselineSet($projectId, $screenshotId);
         $this->io()->write(sprintf('Baseline for project %d has been updated.', $projectId));
+
+        // Successful exit.
+        return new ResultData();
     }
 }

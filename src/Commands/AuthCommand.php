@@ -4,6 +4,7 @@ namespace DiffyCli\Commands;
 
 use Diffy\Diffy;
 use DiffyCli\Config;
+use Robo\ResultData;
 use Robo\Tasks;
 
 class AuthCommand extends Tasks
@@ -25,5 +26,8 @@ class AuthCommand extends Tasks
 
         Config::saveApiKey($apiKey);
         $this->io()->success("Key is validated and saved");
+
+        // Successful exit.
+        return new ResultData();
     }
 }

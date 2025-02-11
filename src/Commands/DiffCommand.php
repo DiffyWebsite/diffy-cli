@@ -7,6 +7,7 @@ use Diffy\Diffy;
 use Diffy\InvalidArgumentsException;
 use DiffyCli\Config;
 use N98\JUnitXml\Document;
+use Robo\ResultData;
 use Robo\Tasks;
 
 class DiffCommand extends Tasks
@@ -64,6 +65,9 @@ class DiffCommand extends Tasks
         }
 
         $this->io()->write($diffId);
+
+        // Successful exit.
+        return new ResultData();
     }
 
     /**
@@ -86,6 +90,9 @@ class DiffCommand extends Tasks
         $diff = Diff::retrieve($diffId);
 
         $this->io()->write($diff->isCompleted());
+
+        // Successful exit.
+        return new ResultData();
     }
 
     /**
@@ -108,6 +115,9 @@ class DiffCommand extends Tasks
         $diff = Diff::retrieve($diffId);
 
         $this->io()->write($diff->getChangesPercentage());
+
+        // Successful exit.
+        return new ResultData();
     }
 
     /**
@@ -125,7 +135,7 @@ class DiffCommand extends Tasks
      *
      * @usage diff:get-result 12345 --format=junit-xml Get diff result.
      */
-    public function getDiffResult(int $diffId, array $options = ['format' => '']): void
+    public function getDiffResult(int $diffId, array $options = ['format' => ''])
     {
         $format = $options['format'] ?? '';
 
@@ -198,6 +208,9 @@ class DiffCommand extends Tasks
         $rootElement->setAttribute('skipped', 0);
 
         $this->io()->write($document->saveXML());
+
+        // Successful exit.
+        return new ResultData();
     }
 
     /**
@@ -246,5 +259,8 @@ class DiffCommand extends Tasks
             ['Total pages' => $totalPages],
             ['Current page' => $page]
         );
+
+        // Successful exit.
+        return new ResultData();
     }
 }

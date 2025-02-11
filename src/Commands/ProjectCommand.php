@@ -10,6 +10,7 @@ use Diffy\Screenshot;
 use DiffyCli\Config;
 use GuzzleHttp\Exception\InvalidArgumentException;
 use GuzzleHttp\Utils;
+use Robo\ResultData;
 use Robo\Tasks;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Yaml\Yaml;
@@ -172,6 +173,9 @@ class ProjectCommand extends Tasks
         }
 
         $this->getIO()->writeln($diffId);
+
+        // Successful exit.
+        return new ResultData();
     }
 
     /**
@@ -196,6 +200,9 @@ class ProjectCommand extends Tasks
         }
 
         $this->getIO()->writeln('Project <info>' . $projectId . '</info> updated.');
+
+        // Successful exit.
+        return new ResultData();
     }
 
     /**
@@ -221,6 +228,9 @@ class ProjectCommand extends Tasks
                 $this->getIO()->writeln('Project <info>' . $projectId . '</info> updated.');
             }
         }
+
+        // Successful exit.
+        return new ResultData();
     }
 
     /**
@@ -250,6 +260,9 @@ class ProjectCommand extends Tasks
             $project_id = Project::createFromData($configuration);
             $this->getIO()->writeln('[<info>' . $project_id . '</info>] <comment>' . $configuration['name'] . '</comment> created.');
         }
+
+        // Successful exit.
+        return new ResultData();
     }
 
     /**
@@ -271,6 +284,9 @@ class ProjectCommand extends Tasks
         $project = Project::get($projectId);
 
         $this->getIO()->writeln(json_encode($project));
+
+        // Successful exit.
+        return new ResultData();
     }
 
     protected function getIO(): SymfonyStyle
