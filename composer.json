@@ -21,7 +21,6 @@
         "diffywebsite/diffy-php": "^1",
         "guzzlehttp/guzzle": "^7",
         "n98/junit-xml": "^1.1",
-        "symfony/yaml": "^6.4"
     },
     "require-dev": {
         "g1a/composer-test-scenarios": "^2",
