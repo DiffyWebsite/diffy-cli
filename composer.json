@@ -20,7 +20,7 @@
         "consolidation/robo": "^4 || ^5",
         "diffywebsite/diffy-php": "^1",
         "guzzlehttp/guzzle": "^7",
-        "n98/junit-xml": "^1.1",
+        "n98/junit-xml": "^1.1"
     },
     "require-dev": {
         "g1a/composer-test-scenarios": "^2",
