@@ -17,7 +17,7 @@
     "require": {
         "php": "^8.0",
         "ext-json": "*",
-        "consolidation/robo": "^4",
+        "consolidation/robo": "^4 || ^5",
         "diffywebsite/diffy-php": "^1",
         "guzzlehttp/guzzle": "^7",
         "n98/junit-xml": "^1.1",
