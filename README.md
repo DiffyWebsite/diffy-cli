@@ -54,9 +54,14 @@ As a result you will get an ID of the screenshot.
 diffy diff:create PROJECT_ID SCREENSHOT_ID1 SCREENSHOT_ID2
 ```
 
-Also, you can create diff with custom name:
+or create diff with custom name:
 ```shell script
 diffy diff:create PROJECT_ID SCREENSHOT_ID1 SCREENSHOT_ID2 --name="custom"
+```
+
+or create diff with custom email notification:
+```shell script
+diffy diff:create PROJECT_ID SCREENSHOT_ID1 SCREENSHOT_ID2 --notifications="test@icloud.com,test@gmail.com"
 ```
 
 Compare screenshots with id SCREENSHOT_ID1 and SCREENSHOT_ID2
@@ -86,6 +91,12 @@ or with existing screenshots
 
 ```shell script
 diffy project:compare PROJECT_ID existing existing --screenshot1=100 --screenshot2=101
+```
+
+or with custom email notification
+
+```shell script
+diffy project:compare PROJECT_ID baseline staging --notifications="test@icloud.com,test@gmail.com"
 ```
 
 Allowed environments are: prod, stage, dev, custom (long options: production, staging, development).
