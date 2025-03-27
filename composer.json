@@ -15,7 +15,7 @@
         }
     },
     "require": {
-        "php": "^8.0",
+        "php": "^8.2",
         "ext-json": "*",
         "consolidation/robo": "^4 || ^5",
         "diffywebsite/diffy-php": "^1",
@@ -32,7 +32,7 @@
     "scripts": {
         "phar:install-tools": [
             "mkdir -p tools",
-            "curl -L https://github.com/humbug/box/releases/download/3.16.0/box.phar -o tools/box",
+            "curl -L https://github.com/humbug/box/releases/download/4.6.6/box.phar -o tools/box",
             "chmod +x tools/box"
         ],
         "phar:build": "env PATH=tools:$PATH box compile",
