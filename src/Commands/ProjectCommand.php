@@ -48,7 +48,7 @@ class ProjectCommand extends Tasks
 
             return Utils::jsonDecode($configuration, true);
         } catch (InvalidArgumentException $exception) {
-            $this->getIO()->writeln('<error>Configuration is not valid JSON<error>');
+            $this->getIO()->writeln('<error>File can not be parsed.<error>');
 
             throw $exception;
         }
@@ -193,8 +193,12 @@ class ProjectCommand extends Tasks
      */
     public function updateProject(int $projectId, string $configurationPath)
     {
+        $data = $this->isValidJsonConfig($configurationPath);
+        if (empty($data)) {
+            return new ResultData(ResultData::EXITCODE_ERROR);
+        }
         if (str_ends_with($configurationPath, '.yaml')) {
-            Project::updateYaml($projectId, $this->isValidJsonConfig($configurationPath));
+            Project::updateYaml($projectId, $configurationPath);
         } else {
             Project::update($projectId, $this->isValidJsonConfig($configurationPath));
         }

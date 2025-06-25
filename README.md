@@ -95,15 +95,10 @@ Allowed environments are: prod, stage, dev, custom (long options: production, st
 If you want to update your config (For example, from CICD)
 
 ```shell script
-diffy project:update PROJECT_ID ./examples/diffy_update_project.json
+diffy project:update PROJECT_ID ./examples/project-settings.yaml
 ```
-See the ./examples/diffy_update_project.json or ./examples/diffy-project-projectID-demo-test-project.yaml file for a valid config file.
 
-For multiple projects
-```shell script
-diffy projects:update ./examples/diffy_update_projects.json
-```
-The PROJECT_ID is defined by the key inside the JSON object.
+You can download project config file from Project Settings page. See https://docs.diffy.website/features/configure-project-from-yaml-file
 
 #### Create project(s)
 Similar you can create a project by passing the config file.
@@ -275,7 +270,7 @@ We use [SemVer](http://semver.org/) for versioning. For the versions available, 
 
 ## Authors
 
-* **Yuriy Gerasimov** - created project from template.
+* **Yuri Gerasimov** - created project from template.
 
 See also the list of [contributors](https://github.com/DiffyWebsite/diffy-cli/contributors) who participated in this project.
 
