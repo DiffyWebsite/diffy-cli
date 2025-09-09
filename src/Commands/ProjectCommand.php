@@ -198,7 +198,7 @@ class ProjectCommand extends Tasks
             return new ResultData(ResultData::EXITCODE_ERROR);
         }
         if (str_ends_with($configurationPath, '.yaml')) {
-            Project::updateYaml($projectId, $configurationPath);
+            Project::updateYaml($projectId, $this->isValidJsonConfig($configurationPath));
         } else {
             Project::update($projectId, $this->isValidJsonConfig($configurationPath));
         }
