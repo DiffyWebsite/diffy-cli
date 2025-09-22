@@ -81,8 +81,7 @@ class ScreenshotCommand extends Tasks
 
         $this->io()->write($screenshotId);
 
-        // Successful exit.
-        return new ResultData();
+        return $screenshotId;
     }
 
     /**
