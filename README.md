@@ -127,7 +127,7 @@ PAGE_NUMBER is number of the page results (starts from 0)
 
 There are two commands available to work with baseline set
 ```shell script
-diffy screenshot:create-baseline PROJECT_ID ENVIRONMENT --wait # will create set of screenshots and set them as baseline right away
+diffy screenshot:create-baseline PROJECT_ID ENVIRONMENT # will create set of screenshots and set them as baseline right away
 diffy screenshot:set-baseline PROJECT_ID SCREENSHOT_ID # set screenshots SCREENSHOT_ID as a baseline
 ```
 

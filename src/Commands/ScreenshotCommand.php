@@ -68,14 +68,21 @@ class ScreenshotCommand extends Tasks
             sleep($sleep);
             $i = 0;
             $screenshot = Screenshot::retrieve($screenshotId);
-            while ($i < $max_wait / $sleep) {
-                if ($screenshot->isCompleted()) {
-                    break;
-                }
-                sleep($sleep);
-                $screenshot->refresh();
+            if ($max_wait !== 1200) {
+                while ($i < $max_wait / $sleep) {
+                    if ($screenshot->isCompleted()) {
+                        break;
+                    }
+                    sleep($sleep);
+                    $screenshot->refresh();
 
-                $i += $sleep;
+                    $i += $sleep;
+                }
+            } else {
+                while (!$screenshot->isCompleted()) {
+                    sleep($sleep);
+                    $screenshot->refresh();
+                }
             }
         }
 
@@ -191,7 +198,7 @@ class ScreenshotCommand extends Tasks
      * @usage screenshot:create-baseline 342 production Take screenshot from production on project 342.
      * @usage screenshot:create-baseline 342 production --wait Take the screenshot and wait till they are completed.
      */
-    public function createScreenshotBaseline($projectId, $environment, array $options = ['wait' => false, 'max-wait' => 1200])
+    public function createScreenshotBaseline($projectId, $environment, array $options = ['wait' => true, 'max-wait' => 1200])
     {
         $apiKey = Config::getConfig()['key'];
 
