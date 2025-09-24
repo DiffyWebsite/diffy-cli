@@ -2,7 +2,7 @@
 
 Command-Line tool for interacting with Diffy.
 
-Great for building integrations for your CI/CD tools. Allows scription taking screenshots, diffs, comparing environments.
+Great for building integrations for your CI/CD tools. Allows taking screenshots, diffs, comparing environments.
 
 [![Travis CI](https://travis-ci.org/DiffyWebsite/diffy-cli.svg?branch=master)](https://travis-ci.org/DiffyWebsite/diffy-cli)
 [![License](https://img.shields.io/badge/license-MIT-408677.svg)](LICENSE)
@@ -11,14 +11,14 @@ Great for building integrations for your CI/CD tools. Allows scription taking sc
 
 ### Manual Installation
 
-Download latest release from [https://github.com/DiffyWebsite/diffy-cli/releases](https://github.com/DiffyWebsite/diffy-cli/releases) page. Download just `diffy.phar` file. No need for all the source code. You can copy file to your executables so it is available everywhere.
+Download the latest release from [https://github.com/DiffyWebsite/diffy-cli/releases](https://github.com/DiffyWebsite/diffy-cli/releases) page. Download just `diffy.phar` file. No need for all the source code. You can copy file to your executables so it is available everywhere.
 
 ```shell script
 wget -O /usr/local/bin/diffy https://github.com/diffywebsite/diffy-cli/releases/latest/download/diffy.phar
 chmod a+x /usr/local/bin/diffy
 ```
 
-### Installion with Composer
+### Installation with Composer
 
 ```shell script
 composer require diffy-website/diffy-cli --with-all-dependencies
@@ -48,7 +48,11 @@ ENVIRONMENT is one of "production", "staging", "development" (short options: "pr
 
 You can use `--wait` key to wait for the screenshot to be completed.
 
-As a result you will get an ID of the screenshot.
+As a result, you will get an ID of the screenshot.
+
+#### Compare screenshots (creating diff)
+
+If you know your screenshots IDs the easiest would be:
 
 ```shell script
 diffy diff:create PROJECT_ID SCREENSHOT_ID1 SCREENSHOT_ID2
@@ -59,7 +63,7 @@ Also, you can create diff with custom name:
 diffy diff:create PROJECT_ID SCREENSHOT_ID1 SCREENSHOT_ID2 --name="custom"
 ```
 
-Compare screenshots with id SCREENSHOT_ID1 and SCREENSHOT_ID2
+#### Shortcut to take screenshots and compare them right away
 
 ```shell script
 diffy project:compare PROJECT_ID production staging
@@ -82,12 +86,6 @@ or in case of custom environment with basic auth credentials
 diffy project:compare PROJECT_ID prod custom --env2Url="https://custom.example.com" --env2User="user" --env2Pass="password"
 ```
 
-or with existing screenshots
-
-```shell script
-diffy project:compare PROJECT_ID existing existing --screenshot1=100 --screenshot2=101
-```
-
 Allowed environments are: prod, stage, dev, custom (long options: production, staging, development).
 
 #### Update project(s)
@@ -101,14 +99,15 @@ diffy project:update PROJECT_ID ./examples/project-settings.yaml
 You can download project config file from Project Settings page. See https://docs.diffy.website/features/configure-project-from-yaml-file
 
 #### Create project(s)
+
 Similar you can create a project by passing the config file.
 
 ```shell script
-diffy project:create ./examples/diffy_create_project.json
+diffy project:create ./examples/diffy_create_project.yaml
 ```
-You can create multiple projects by giving an array of projects.
 
 #### Get project information
+
 Get the full settings of the project
 
 ```shell script
@@ -146,50 +145,6 @@ The only difference you will need to have is to pass commit sha to compare opera
 ```shell script
 diffy project:compare PROJECT_ID prod custom --env2Url="https://custom.example.com" --commit-sha="29b872765b21387b7adfd67fd16b7f11942e1a56"
 ```
-
-### BrowserStack integration
-
-If you have Automate Pro plan or higher we can use Screenshot API to generate screenshots and send them to Diffy.
-
-For that you need following steps.
-
-Save credentials. They can be obtained at [account setting page](https://www.browserstack.com/accounts/settings).
-```shell script
-php diffy browserstack:save-credentials <username> <access_key>
-```
-
-Get a list of all possible browsers available to choose which ones you would like to use.
-```shell script
-php diffy browserstack:browsers-list
-```
-
-Run process of taking screenshots
-```shell script
-php diffy browserstack:screenshot PROJECT_ID http://url-of-the-site.com safari--6.0--OS__X--Lion,firefox--39.0--Windows--8 --wait=10
-```
-
-### LambdaTest integration
-
-If you have Live plan or higher we can use Screenshot API to generate screenshots and send them to Diffy.
-
-For that you need following steps.
-
-First you need to save credentials. They can be obtained at [account setting page](https://accounts.lambdatest.com/detail/profile). You need to pass your Username and Access Token.
-```shell script
-php diffy lambdatest:save-credentials <username> <access_token>
-```
-
-Get a list of all possible browsers available to choose which ones you would like to use.
-```shell script
-php diffy lambdatest:browsers-list
-```
-
-Run process of taking screenshots
-```shell script
-php diffy lambdatest:screenshot PROJECT_ID http://url-of-the-site.com  --wait=10 windows__10--opera--75,windows__10--chrome--90
-```
-
-Once the job is completed you can see screenshots set appeared in your project.
 
 ### Examples
 
@@ -270,7 +225,7 @@ We use [SemVer](http://semver.org/) for versioning. For the versions available, 
 
 ## Authors
 
-* **Yuri Gerasimov** - created project from template.
+* **Yuri Gerasymov** - created project from template.
 
 See also the list of [contributors](https://github.com/DiffyWebsite/diffy-cli/contributors) who participated in this project.
 
