@@ -39,6 +39,20 @@ class ScreenshotCommand extends Tasks
 
         Diffy::setApiKey($apiKey);
 
+        $screenshotId = $this->createScreenshotInternal($projectId, $environment, $options);
+
+        $this->io()->write($screenshotId);
+
+        // Successful exit.
+        return new ResultData();
+    }
+
+    /**
+     * Internal function to create screenshot.
+     *
+     * Used in both createScreenshot() and createScreenshotBaseline() commands.
+     */
+    protected function createScreenshotInternal($projectId, $environment, array $options = ['wait' => false, 'max-wait' => 1200, 'envUrl' => '']): ?int {
         if ($environment === 'prod') {
             $environment = 'production';
         } elseif ($environment === 'dev') {
@@ -68,25 +82,16 @@ class ScreenshotCommand extends Tasks
             sleep($sleep);
             $i = 0;
             $screenshot = Screenshot::retrieve($screenshotId);
-            if ($max_wait !== 1200) {
-                while ($i < $max_wait / $sleep) {
-                    if ($screenshot->isCompleted()) {
-                        break;
-                    }
-                    sleep($sleep);
-                    $screenshot->refresh();
+            while ($i < $max_wait) {
+                if ($screenshot->isCompleted()) {
+                    break;
+                }
+                sleep($sleep);
+                $screenshot->refresh();
 
-                    $i += $sleep;
-                }
-            } else {
-                while (!$screenshot->isCompleted()) {
-                    sleep($sleep);
-                    $screenshot->refresh();
-                }
+                $i += $sleep;
             }
         }
-
-        $this->io()->write($screenshotId);
 
         return $screenshotId;
     }
@@ -204,8 +209,10 @@ class ScreenshotCommand extends Tasks
 
         Diffy::setApiKey($apiKey);
 
-        $screenshotId = $this->createScreenshot($projectId, $environment, $options);
+        $screenshotId = $this->createScreenshotInternal($projectId, $environment, $options);
         Screenshot::setBaselineSet($projectId, $screenshotId);
+
+        $this->io()->write($screenshotId);
 
         // Successful exit.
         return new ResultData();
