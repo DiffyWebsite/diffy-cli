@@ -31,8 +31,6 @@ $commandClasses = [
   \DiffyCli\Commands\DiffCommand::class,
   \DiffyCli\Commands\ScreenshotCommand::class,
   \DiffyCli\Commands\ProjectCommand::class,
-  \DiffyCli\Commands\BrowserStackCommand::class,
-  \DiffyCli\Commands\LambdaTestCommand::class,
 ];
 $selfUpdateRepository = 'DiffyWebsite/diffy-cli';
 $configPrefix = 'DIFFYCLI';
