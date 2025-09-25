@@ -20,36 +20,6 @@ class Config
     }
 
     /**
-     * Save Browserstack credentials.
-     *
-     * @param  $username
-     * @param  $accessKey
-     * @throws \Exception
-     */
-    public static function saveBrowserstackCredentials($username, $accessKey)
-    {
-        $config = self::getConfig();
-        $config['browserStackUsername'] = $username;
-        $config['browserStackAccessKey'] = $accessKey;
-        self::saveConfig($config);
-    }
-
-    /**
-     * Save Lambdatest credentials.
-     *
-     * @param  $username
-     * @param  $accessToken
-     * @throws \Exception
-     */
-    public static function saveLambdatestCredentials($username, $accessToken)
-    {
-        $config = self::getConfig();
-        $config['lambdaTestUsername'] = $username;
-        $config['lambdaTestAccessToken'] = $accessToken;
-        self::saveConfig($config);
-    }
-
-    /**
      * Save configuration file.
      *
      * @param  $config
