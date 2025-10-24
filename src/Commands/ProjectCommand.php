@@ -293,6 +293,208 @@ class ProjectCommand extends Tasks
         return new ResultData();
     }
 
+    /**
+     * Get the list of projects
+     *
+     * The output is raw JSON.
+     *
+     * @command project:list
+     *
+     * @usage project:list
+     */
+    public function listProject()
+    {
+        $apiKey = Config::getConfig()['key'];
+
+        Diffy::setApiKey($apiKey);
+        $list = Project::all();
+
+        $this->getIO()->writeln(json_encode($list));
+
+        // Successful exit.
+        return new ResultData();
+    }
+
+    /**
+     * Trigger comparison job for multiple projects
+     *
+     * @command project:compare-multiple
+     *
+     * @param string $env1 First environment to compare
+     * @param string $env2 Second environment to compare
+     * @param array $options
+     *
+     * @usage project:compare-multiple prod dev --wait --projectIds=123,456
+     *   Compare prod and dev environments.
+     * @usage project:compare-multiple prod dev-local --wait --projectIds=123,456 --path-worker=/path/to/worker/diffy-worker
+     *    Compare prod and local sites. Make sure to specify a path to the worker script.
+     */
+    public function compareMultiple(
+        string $env1,
+        string $env2,
+        array $options = [
+            'wait' => false,
+            'max-wait' => 1200,
+            'projectIds' => '',
+            'path-worker' => '',
+        ]
+    )
+    {
+        $apiKey = Config::getConfig()['key'];
+
+        Diffy::setApiKey($apiKey);
+        $projectsListAll = Project::all();
+
+        // Check if we received project Ids inline or we ask fok for selection.
+        if (!empty($options['projectIds'])) {
+            $selectedProjects = explode(',', $options['projectIds']);
+        }
+        else {
+            $projectChoice = [];
+            foreach ($projectsListAll['projects'] as $project) {
+                $projectChoice[] = sprintf('%s - %d', $project['name'], $project['id']);
+            }
+
+            $selectedProjects = $this->getIO()->choice('Choose projects to run comparison (coma-separated list of IDs)', $projectChoice, null, true);
+        }
+
+        // Match selected projects with IDs.
+        $selectedProjectsIds = [];
+        $projectEnvironments = [];
+        foreach ($selectedProjects as $selectedProject) {
+            $selectedProject = trim($selectedProject);
+            $selectedProjectId = null;
+            if (is_numeric($selectedProject)) {
+                foreach ($projectsListAll['projects'] as $project) {
+                    if ($project['id'] == $selectedProject) {
+                        $selectedProjectId = $project['id'];
+                        break;
+                    }
+                }
+            } else {
+                foreach ($projectsListAll['projects'] as $project) {
+                    if (sprintf('%s - %d', $project['name'], $project['id']) == $selectedProject) {
+                        $selectedProjectId = $project['id'];
+                        break;
+                    }
+                }
+            }
+            if (!empty($selectedProjectId)) {
+                $projectData = Project::get($selectedProjectId);
+                $projectEnvironments[$selectedProjectId] = [
+                    'production' => $projectData['production'],
+                    'prod' => $projectData['production'],
+                    'staging' => $projectData['staging'],
+                    'stage' => $projectData['staging'],
+                    'development' => $projectData['development'],
+                    'dev' => $projectData['development'],
+                ];
+                $selectedProjectsIds[] = $selectedProjectId;
+            }
+        }
+
+        $this->getIO()->writeln('Selected projects: ' . implode(', ', $selectedProjectsIds));
+
+        $env1local = false;
+        if (strpos($env1, '-local') !== false) {
+            $env1local = true;
+            $env1 = str_replace('-local', '', $env1);
+        }
+
+        $env2local = false;
+        if (strpos($env2, '-local') !== false) {
+            $env2local = true;
+            $env2 = str_replace('-local', '', $env2);
+        }
+
+        // Let's check if local worker exists.
+        if ($env1local || $env2local) {
+            if (empty($options['path-worker'])) {
+                $this->getIO()->writeln('You must provide a path to the worker script.');
+                return new ResultData(ResultData::EXITCODE_ERROR);
+            }
+
+            if (!file_exists($options['path-worker'])) {
+                $this->getIO()->writeln('Worker script not found.');
+                return new ResultData(ResultData::EXITCODE_ERROR);
+            }
+
+            foreach ($selectedProjectsIds as $projectId) {
+                if ($env1local) {
+                    $envUrl = $projectEnvironments[$projectId][$env1];
+                    $this->getIO()->writeln('Triggering local screenshot for project ' . $projectId);
+                    $screenshots1Progress[$projectId] = $this->taskExec(sprintf('node %s --env-file=.env diffy-screenshots --url=%s --projectId=%d', $options['path-worker'], $envUrl, $projectId))->run();
+                }
+                if ($env2local) {
+                    $envUrl = $projectEnvironments[$projectId][$env2];
+                    $this->getIO()->writeln('Triggering local screenshot for project ' . $projectId);
+                    $screenshots2Progress[$projectId] = $this->taskExec(sprintf('node %s --env-file=.env diffy-screenshots --url=%s --projectId=%d', $options['path-worker'], $envUrl, $projectId))->run();
+                }
+            }
+        }
+
+        $screenshots1Progress = [];
+        $screenshots2Progress = [];
+
+        // First, let's trigger non-local screenshots.
+        if (!$env1local) {
+            foreach ($selectedProjectsIds as $projectId) {
+                $screenshots1Progress[$projectId] = Screenshot::create($projectId, $env1);
+            }
+            $this->getIO()->writeLn(sprintf('All screenshots for %s environment started.', $env1));
+        }
+        if (!$env2local) {
+            foreach ($selectedProjectsIds as $projectId) {
+                $screenshots2Progress[$projectId] = Screenshot::create($projectId, $env2);
+            }
+            $this->getIO()->writeLn(sprintf('All screenshots for %s environment started.', $env1));
+        }
+
+        // Let's start local screenshots.
+        if ($env1local) {
+            foreach ($selectedProjectsIds as $projectId) {
+
+            }
+        }
+
+        // Last, create diffs.
+        $diffsProgressIds = [];
+        foreach ($selectedProjectsIds as $projectId) {
+            $diffsProgressIds[$projectId] = Diff::create($projectId, $screenshots1Progress[$projectId], $screenshots2Progress[$projectId]);
+        }
+        $this->getIO()->writeLn('All comparisons started.');
+
+        if (!empty($options['wait']) && $options['wait'] == true) {
+            $sleep = 10;
+            sleep($sleep);
+            $i = 0;
+            $diffsProgress = [];
+            foreach ($diffsProgressIds as $projectId => $diffId) {
+                $diffsProgress[$projectId] = Diff::retrieve($diffId);
+            }
+            while ($i < (int)$options['max-wait'] / $sleep) {
+                sleep($sleep);
+
+                foreach ($diffsProgress as $projectId => $diff) {
+                    $diff->refresh();
+                    if ($diff->isCompleted()) {
+                        $this->getIO()->writeln('Diff for project <info>' . $projectId . '</info> completed. ' . $diff->getReadableResult());
+                        unset($diffsProgress[$projectId]);
+                    }
+                }
+
+                $i += $sleep;
+
+                if (empty($diffsProgress)) {
+                    break;
+                }
+            }
+        }
+
+        // Successful exit.
+        return new ResultData();
+    }
+
     protected function getIO(): SymfonyStyle
     {
         if (!$this->io) {
