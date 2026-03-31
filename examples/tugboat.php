@@ -151,9 +151,8 @@ $basePass     = isset($baseParts['pass'])    ? urldecode($baseParts['pass'])    
 $compareUser  = isset($compareParts['user']) ? urldecode($compareParts['user']) : null;
 $comparePass  = isset($compareParts['pass']) ? urldecode($compareParts['pass']) : null;
 
-// Build pages array and full URLs for project creation
-$pages    = array_values(array_filter(array_map('trim', explode(',', $pagesArg))));
-$fullUrls = array_map(fn ($p) => $baseClean . '/' . ltrim($p, '/'), $pages);
+// Build pages array
+$pages = array_values(array_filter(array_map('trim', explode(',', $pagesArg))));
 
 if (empty($pages)) {
     fail('No pages provided.');
@@ -180,17 +179,33 @@ if (!empty($projectList['projects'])) {
 if (!$projectId) {
     out("No project found. Creating project '$baseClean'...");
 
-    $config  = [
-        'name'        => $baseClean,
-        'production'  => $baseClean,
-        'breakpoints' => [320, 1024, 1920],
-        'urls'        => $fullUrls,
-    ];
-    $tmpFile = tempnam(sys_get_temp_dir(), 'diffy_') . '.json';
-    file_put_contents($tmpFile, json_encode($config, JSON_PRETTY_PRINT));
+    // Build YAML using single-quoted scalars to safely handle special characters.
+    $q = fn (string $v): string => "'" . str_replace("'", "''", $v) . "'";
+
+    $yaml  = "basic:\n";
+    $yaml .= "    name: " . $q($baseClean) . "\n";
+    $yaml .= "    environments:\n";
+    $yaml .= "        production: " . $q($baseClean) . "\n";
+    $yaml .= "    breakpoints:\n";
+    foreach ([320, 1024, 1920] as $bp) {
+        $yaml .= "        - $bp\n";
+    }
+    $yaml .= "    pages:\n";
+    foreach ($pages as $page) {
+        $yaml .= "        - " . $q($page) . "\n";
+    }
+
+    $tmpFile = '/tmp/diffy_' . uniqid() . '.yaml';
+    file_put_contents($tmpFile, $yaml);
+
+    if ($debug) {
+        out('[debug] project config YAML: ' . $tmpFile);
+    }
 
     $createOut = diffyCapture('project:create ' . escapeshellarg($tmpFile));
-    unlink($tmpFile);
+    if (!$debug) {
+        unlink($tmpFile);
+    }
 
     // Expected output: "[12345] Project Name created."
     if (preg_match('/\[(\d+)\]/', $createOut, $m)) {
