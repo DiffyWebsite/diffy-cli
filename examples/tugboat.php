@@ -17,9 +17,11 @@
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function out(string $msg = ''): void
+function out(?string $msg = ''): void
 {
-    echo $msg . PHP_EOL;
+    static $silent = false;
+    if ($msg === null) { $silent = true; return; }
+    if (!$silent) { echo $msg . PHP_EOL; }
 }
 
 function err(string $msg): void
@@ -33,10 +35,16 @@ function fail(string $msg, int $code = 1): never
     exit($code);
 }
 
-function diffyCapture(string $args): string
+function diffyCapture(string $args, ?string $initBin = null, bool $initDebug = false): string
 {
-    global $diffyBin, $debug;
-    $cmd = escapeshellcmd($diffyBin) . ' ' . $args;
+    static $bin   = 'diffy';
+    static $debug = false;
+    if ($initBin !== null) {
+        $bin   = $initBin;
+        $debug = $initDebug;
+        return '';
+    }
+    $cmd = escapeshellcmd($bin) . ' ' . $args;
     if ($debug) {
         out('[debug] ' . $cmd);
     }
@@ -60,59 +68,6 @@ function buildCleanUrl(array $parts): string
     return $url;
 }
 
-/**
- * Obtain (and cache) a Diffy Bearer token from the CLI config file.
- */
-function diffyApiToken(): ?string
-{
-    static $token = null;
-    if ($token !== null) {
-        return $token ?: null;
-    }
-    $configFile = (getenv('DIFFYCLI_CONFIG') ?: getenv('HOME') . '/.diffy-cli') . '/diffy-cli.yaml';
-    if (!file_exists($configFile)) {
-        return $token = '';
-    }
-    $apiKey = null;
-    foreach (file($configFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
-        if (preg_match('/^key:\s*(.+)$/', trim($line), $m)) {
-            $apiKey = trim($m[1], '"\'');
-            break;
-        }
-    }
-    if (!$apiKey) {
-        return $token = '';
-    }
-    $ch = curl_init('https://app.diffy.website/api/auth/key');
-    curl_setopt_array($ch, [
-        CURLOPT_POST          => true,
-        CURLOPT_POSTFIELDS    => json_encode(['key' => $apiKey]),
-        CURLOPT_HTTPHEADER    => ['Content-Type: application/json', 'Accept: application/json'],
-        CURLOPT_RETURNTRANSFER => true,
-    ]);
-    $data = json_decode(curl_exec($ch), true);
-    curl_close($ch);
-    return $token = ($data['token'] ?? '');
-}
-
-/**
- * Make an authenticated GET request to the Diffy API.
- */
-function diffyApiRequest(string $endpoint): ?array
-{
-    $token = diffyApiToken();
-    if (!$token) {
-        return null;
-    }
-    $ch = curl_init('https://app.diffy.website/api/' . $endpoint);
-    curl_setopt_array($ch, [
-        CURLOPT_HTTPHEADER    => ['Authorization: Bearer ' . $token, 'Accept: application/json'],
-        CURLOPT_RETURNTRANSFER => true,
-    ]);
-    $data = json_decode(curl_exec($ch), true);
-    curl_close($ch);
-    return $data ?: null;
-}
 
 // ─── Bootstrap ────────────────────────────────────────────────────────────────
 
@@ -125,16 +80,22 @@ $diffyBin = file_exists($scriptDir . '/../diffy')
 
 // ─── Parse arguments ──────────────────────────────────────────────────────────
 
-$opts = getopt('', ['base-url:', 'compare-url:', 'pages:', 'debug'], $restIndex);
+$opts = getopt('', ['base-url:', 'compare-url:', 'pages:', 'debug', 'json'], $restIndex);
 $positional = array_values(array_slice($argv, $restIndex));
 
 $baseUrl    = $opts['base-url']    ?? $positional[0] ?? null;
 $compareUrl = $opts['compare-url'] ?? $positional[1] ?? null;
 $pagesArg   = $opts['pages']       ?? $positional[2] ?? null;
 $debug      = isset($opts['debug']);
+$jsonOutput = isset($opts['json']);
+
+diffyCapture('', $diffyBin, $debug);
+if ($jsonOutput) {
+    out(null);
+}
 
 if (!$baseUrl || !$compareUrl || !$pagesArg) {
-    err('Usage: php tugboat.php [--debug] <base_url> <compare_url> <pages>');
+    err('Usage: php tugboat.php [--debug] [--json] <base_url> <compare_url> <pages>');
     err('       pages: comma-separated paths, e.g. /,/about-us,/blog');
     exit(1);
 }
@@ -219,6 +180,8 @@ out();
 
 // ─── Take screenshots and create diff ─────────────────────────────────────────
 
+$comparisonStart = microtime(true);
+
 out('Starting comparison:');
 out('  Base URL:    ' . $baseClean);
 out('  Compare URL: ' . $compareClean);
@@ -276,66 +239,50 @@ out();
 
 // ─── Fetch results ────────────────────────────────────────────────────────────
 
-$xmlOut = diffyCapture("diff:get-result $diffId --format=junit-xml");
-if (empty($xmlOut)) {
+$jsonOut = diffyCapture("diff:get-result $diffId --format=json");
+if (empty($jsonOut)) {
     fail("No results returned for diff $diffId.");
 }
 
-$xml = @simplexml_load_string($xmlOut);
-if (!$xml) {
-    fail('Could not parse diff results. Raw output: ' . substr($xmlOut, 0, 200));
+$diffJson = json_decode($jsonOut, true);
+if (!$diffJson) {
+    fail('Could not parse diff results. Raw output: ' . substr($jsonOut, 0, 200));
 }
 
-// Fetch full snapshot and diff data for actual S3 image URLs.
-$s3Base   = 'https://s3.amazonaws.com/diffy-files/';
-$snap1Api = diffyApiRequest('snapshots/' . $screenshotId1);
-$snap2Api = diffyApiRequest('snapshots/' . $screenshotId2);
-$diffApi  = diffyApiRequest('diffs/' . $diffId);
+
 
 // ─── Parse results ────────────────────────────────────────────────────────────
 
-$totalTests    = (int) $xml['tests'];
-$totalFailures = (int) $xml['failures'];
-$diffName      = (string) $xml['name'];
+$diffName      = $diffJson['name'] ?? '';
+$totalTests    = 0;
+$totalFailures = 0;
 
-// byBreakpoint[label][] = { page, diff_url, changes, changed }
+// byBreakpoint[label][] = { page, diff_url, changes, changed, screenshot_url1, screenshot_url2 }
 // byPage[pageUrl]       = { failures, tests, results[bp] }
 $byBreakpoint = [];
 $byPage       = [];
 
-foreach ($xml->testsuite as $suite) {
-    $pageUrl = (string) $suite['name'];
-    $entry   = [
-        'tests'    => (int) $suite['tests'],
-        'failures' => (int) $suite['failures'],
-        'results'  => [],
-    ];
+$snapshot1 = $diffJson['snapshot1'] ?? [];
+$snapshot2 = $diffJson['snapshot2'] ?? [];
 
-    foreach ($suite->testcase as $testcase) {
-        $bp      = (string) $testcase['name']; // "Device size: 320"
-        $diffUrl = (string) $testcase['file'];
-        $pct     = 0.0;
-        $changed = isset($testcase->failure);
+foreach ($diffJson['diffs'] as $pageUrl => $breakpoints) {
+    $entry = ['tests' => 0, 'failures' => 0, 'results' => []];
 
-        if ($changed && preg_match('/^([\d.]+)%/', (string) $testcase->failure, $pm)) {
-            $pct = (float) $pm[1];
+    foreach ($breakpoints as $bpNum => $item) {
+        $changed = !empty($item['idiff']['areas']);
+        $bp      = 'Device size: ' . $bpNum;
+
+        $s3DiffUrl      = $item['idiff']['full']      ?? null;
+        $screenshotUrl1 = $snapshot1[$pageUrl][$bpNum]['full'] ?? null;
+        $screenshotUrl2 = $snapshot2[$pageUrl][$bpNum]['full'] ?? null;
+
+        $entry['tests']++;
+        if ($changed) {
+            $entry['failures']++;
         }
-
-        // Breakpoint number as stored in the API (e.g. "320" from "Device size: 320").
-        $bpNum = preg_replace('/[^0-9]/', '', $bp);
-
-        // S3 screenshot URLs from the snapshot API ("full" property).
-        $s3Snap1 = $snap1Api['pages'][$pageUrl][$bpNum]['full'] ?? null;
-        $s3Snap2 = $snap2Api['pages'][$pageUrl][$bpNum]['full'] ?? null;
-        $s3Diff  = $diffApi['diffs'][$pageUrl][$bpNum]['full']  ?? null;
-
-        $screenshotUrl1 = $s3Snap1 ? $s3Base . $s3Snap1 : null;
-        $screenshotUrl2 = $s3Snap2 ? $s3Base . $s3Snap2 : null;
-        $s3DiffUrl      = $s3Diff  ? $s3Base . $s3Diff  : $diffUrl;
 
         $entry['results'][$bp] = [
             'diff_url'        => $s3DiffUrl,
-            'changes'         => $pct,
             'changed'         => $changed,
             'screenshot_url1' => $screenshotUrl1,
             'screenshot_url2' => $screenshotUrl2,
@@ -344,14 +291,35 @@ foreach ($xml->testsuite as $suite) {
         $byBreakpoint[$bp][] = [
             'page'            => $pageUrl,
             'diff_url'        => $s3DiffUrl,
-            'changes'         => $pct,
             'changed'         => $changed,
             'screenshot_url1' => $screenshotUrl1,
             'screenshot_url2' => $screenshotUrl2,
         ];
     }
 
+    $totalTests    += $entry['tests'];
+    $totalFailures += $entry['failures'];
     $byPage[$pageUrl] = $entry;
+}
+
+// ─── JSON output ──────────────────────────────────────────────────────────────
+
+if ($jsonOutput) {
+    $output = [];
+    foreach ($byPage as $pageUrl => $data) {
+        foreach ($data['results'] as $bp => $res) {
+            $output[] = [
+                'page'        => $pageUrl,
+                'breakpoint'  => (int) preg_replace('/[^0-9]/', '', $bp),
+                'screenshot1' => $res['screenshot_url1'],
+                'screenshot2' => $res['screenshot_url2'],
+                'diff'        => $res['diff_url'],
+                'changed'     => $res['changed'] ? 1 : 0,
+            ];
+        }
+    }
+    echo json_encode($output, JSON_PRETTY_PRINT) . PHP_EOL;
+    exit(0);
 }
 
 // ─── Print results ────────────────────────────────────────────────────────────
@@ -367,76 +335,36 @@ out('  Screenshot 2:  ' . $screenshotId2 . '  (' . $compareClean . ')');
 out(str_repeat('═', 68));
 out();
 
-// ── 1. Screenshot URLs grouped by breakpoint ──────────────────────────────────
+// ── 1. Results by page ────────────────────────────────────────────────────────
 
-out('SCREENSHOT URLS BY BREAKPOINT');
+out('RESULTS');
 out($hr);
-
-foreach ($byBreakpoint as $breakpoint => $entries) {
-    out();
-    out('  ' . $breakpoint);
-    foreach ($entries as $row) {
-        out('    Page: ' . $row['page']);
-        out('      Base:    ' . $row['screenshot_url1']);
-        out('      Compare: ' . $row['screenshot_url2']);
-    }
-}
-out();
-
-// ── 2. Diff URLs grouped by breakpoint ────────────────────────────────────────
-
-out('DIFF URLS BY BREAKPOINT');
-out($hr);
-
-foreach ($byBreakpoint as $breakpoint => $entries) {
-    out();
-    out('  ' . $breakpoint);
-    foreach ($entries as $row) {
-        $marker = $row['changed']
-            ? sprintf('[%5.1f%% changed]', $row['changes'])
-            : '[  no changes]';
-        out(sprintf('    %s  %s', $marker, $row['diff_url']));
-        out(sprintf('    %s  Page: %s', str_repeat(' ', 15), $row['page']));
-    }
-}
-out();
-
-// ── 3. Statistics per page ────────────────────────────────────────────────────
-
-out('STATISTICS BY PAGE');
-out($hr);
-out();
 
 foreach ($byPage as $pageUrl => $data) {
-    $changed = $data['failures'];
-    $total   = $data['tests'];
-    $label   = $changed > 0
-        ? sprintf('CHANGES FOUND  (%d of %d breakpoints affected)', $changed, $total)
-        : 'No changes';
-
-    out('  Page: ' . $pageUrl);
-    out('  ' . $label);
-
-    foreach ($data['results'] as $bp => $res) {
-        $stat = $res['changed']
-            ? sprintf('%.1f%% changed', $res['changes'])
-            : 'OK';
-        out(sprintf('    %-22s %s', $bp . ':', $stat));
-    }
     out();
+    out('  Page: ' . $pageUrl);
+    foreach ($data['results'] as $bp => $res) {
+        out('    ' . $bp);
+        out('      Screenshot 1: ' . $res['screenshot_url1']);
+        out('      Screenshot 2: ' . $res['screenshot_url2']);
+        out('      Diff:         ' . $res['diff_url']);
+        out('      Changed:      ' . ($res['changed'] ? '1' : '0'));
+    }
 }
+out();
 
-// ── 4. Overall summary ────────────────────────────────────────────────────────
+// ── 2. Overall summary ────────────────────────────────────────────────────────
 
 $pagesChanged = count(array_filter($byPage, fn ($p) => $p['failures'] > 0));
 $totalPages   = count($byPage);
-$overallPct   = $totalTests > 0 ? round($totalFailures / $totalTests * 100, 1) : 0;
 
 out(str_repeat('═', 68));
 out('  SUMMARY');
-out(sprintf('  Pages compared:          %d', $totalPages));
-out(sprintf('  Pages with changes:      %d / %d', $pagesChanged, $totalPages));
-out(sprintf('  Breakpoints checked:     %d', count($byBreakpoint)));
-out(sprintf('  Checks with changes:     %d / %d', $totalFailures, $totalTests));
-out(sprintf('  Overall change rate:     %s%%', $overallPct));
+out(sprintf('  Pages compared:      %d', $totalPages));
+out(sprintf('  Pages with changes:  %d / %d', $pagesChanged, $totalPages));
+out(sprintf('  Breakpoints checked: %d', $totalTests));
+out(sprintf('  Checks with changes: %d / %d', $totalFailures, $totalTests));
+if ($debug) {
+    out(sprintf('  Total time:          %.1fs', microtime(true) - $comparisonStart));
+}
 out(str_repeat('═', 68));
