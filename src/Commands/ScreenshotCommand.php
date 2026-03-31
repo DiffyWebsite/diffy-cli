@@ -28,12 +28,15 @@ class ScreenshotCommand extends Tasks
      * @option wait Wait for the screenshot to be completed
      * @option max-wait Maximum number of seconds to wait for the screenshot to be completed.
      * @option envUrl URL of the custom environment.
+     * @option envUser Basic auth username for the custom environment.
+     * @option envPass Basic auth password for the custom environment.
      *
      * @usage screenshot:create 342 production Take screenshot from production on project 342.
      * @usage screenshot:create 342 production --wait Take the screenshot and wait till they are completed.
-     * @usage screenshot:create 342 custom --envUrl="" Take the screenshot and wait till they are completed.
+     * @usage screenshot:create 342 custom --envUrl="https://example.com" Take the screenshot and wait till they are completed.
+     * @usage screenshot:create 342 custom --envUrl="https://example.com" --envUser=user --envPass=secret Take screenshot with basic auth.
      */
-    public function createScreenshot($projectId, $environment, array $options = ['wait' => false, 'max-wait' => 1200, 'envUrl' => ''])
+    public function createScreenshot($projectId, $environment, array $options = ['wait' => false, 'max-wait' => 1200, 'envUrl' => '', 'envUser' => '', 'envPass' => ''])
     {
         $apiKey = Config::getConfig()['key'];
 
@@ -52,7 +55,7 @@ class ScreenshotCommand extends Tasks
      *
      * Used in both createScreenshot() and createScreenshotBaseline() commands.
      */
-    protected function createScreenshotInternal($projectId, $environment, array $options = ['wait' => false, 'max-wait' => 1200, 'envUrl' => '']): ?int {
+    protected function createScreenshotInternal($projectId, $environment, array $options = ['wait' => false, 'max-wait' => 1200, 'envUrl' => '', 'envUser' => '', 'envPass' => '']): ?int {
         if ($environment === 'prod') {
             $environment = 'production';
         } elseif ($environment === 'dev') {
@@ -71,8 +74,16 @@ class ScreenshotCommand extends Tasks
             }
 
             $optionsCreate = [
-                'baseUrl' => $options['envUrl']
+                'baseUrl' => $options['envUrl'],
             ];
+            if (!empty($options['envUser'])) {
+                $optionsCreate['credsUser'] = $options['envUser'];
+                $optionsCreate['credsMode'] = TRUE;
+            }
+            if (!empty($options['envPass'])) {
+                $optionsCreate['credsPass'] = $options['envPass'];
+                $optionsCreate['credsMode'] = TRUE;
+            }
             $screenshotId = Screenshot::create($projectId, $environment, $optionsCreate);
         }
 

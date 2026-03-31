@@ -127,13 +127,14 @@ class DiffCommand extends Tasks
      *
      * @param int $diffId
      *
-     * @option format Format of the output (supported: junit-xml)
+     * @option format Format of the output (supported: junit-xml, json)
      *
      * @return mixed
      *
      * @throws \Exception
      *
      * @usage diff:get-result 12345 --format=junit-xml Get diff result.
+     * @usage diff:get-result 12345 --format=json Get raw diff result as JSON.
      */
     public function getDiffResult(int $diffId, array $options = ['format' => ''])
     {
@@ -142,8 +143,8 @@ class DiffCommand extends Tasks
         if (!$format) {
             $this->io()->error('Provide --format="value" option');
             return;
-        } elseif (!in_array($format, ['junit-xml'])) {
-            $this->io()->error('Format value is not supported. Provide one of the following values: junit-xml.');
+        } elseif (!in_array($format, ['junit-xml', 'json'])) {
+            $this->io()->error('Format value is not supported. Provide one of the following values: junit-xml, json.');
             return;
         }
 
@@ -155,6 +156,11 @@ class DiffCommand extends Tasks
         $apiKey = Config::getConfig()['key'];
         Diffy::setApiKey($apiKey);
         $diff = Diff::retrieve($diffId);
+
+        if ($format === 'json') {
+            $this->io()->write(json_encode($diff->data));
+            return new ResultData();
+        }
 
         if (!in_array($diff->data['state'], [2, 3, 4])) {
             $this->io()->error('Diff is not completed. Retry later.');
