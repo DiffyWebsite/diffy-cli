@@ -230,6 +230,73 @@ class ScreenshotCommand extends Tasks
     }
 
     /**
+     * Create a functional test snapshot from a folder of screenshots
+     *
+     * @command screenshot:create-folder
+     *
+     * @param int    $projectId   ID of the project
+     * @param string $folderPath  Path to the folder containing screenshot images (PNG/JPG)
+     *
+     * @usage screenshot:create-folder 342 ./screenshots Upload screenshots from folder as a functional test snapshot.
+     */
+    public function createFolderScreenshot($projectId, string $folderPath)
+    {
+        $apiKey = Config::getConfig()['key'];
+
+        Diffy::setApiKey($apiKey);
+
+        if (!is_dir($folderPath)) {
+            $this->io()->write(sprintf('Folder not found: %s', $folderPath));
+            throw new InvalidArgumentException();
+        }
+
+        $files = array_values(array_filter(
+            scandir($folderPath),
+            function ($file) use ($folderPath) {
+                $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+                return in_array($ext, ['png', 'jpg', 'jpeg']) && is_file($folderPath . DIRECTORY_SEPARATOR . $file);
+            }
+        ));
+
+        if (empty($files)) {
+            $this->io()->write(sprintf('No PNG/JPG images found in folder: %s', $folderPath));
+            throw new InvalidArgumentException();
+        }
+
+        $data = [
+            ['name' => 'snapshotName', 'contents' => basename(realpath($folderPath))],
+            ['name' => 'functionalTest', 'contents' => '1'],
+        ];
+
+        foreach ($files as $key => $filename) {
+            $filepath = $folderPath . DIRECTORY_SEPARATOR . $filename;
+            $imageSize = getimagesize($filepath);
+            if ($imageSize === false) {
+                $this->io()->write(sprintf('Could not read image dimensions for file: %s', $filename));
+                throw new InvalidArgumentException();
+            }
+            $width = $imageSize[0];
+            $url = '/' . pathinfo($filename, PATHINFO_FILENAME);
+
+            $data[] = ['name' => 'breakpoints[' . $key . ']', 'contents' => (string) $width];
+            $data[] = ['name' => 'urls[' . $key . ']', 'contents' => $url];
+            $data[] = [
+                'Content-type' => 'multipart/form-data',
+                'name' => 'files[' . $key . ']',
+                'filename' => $filename,
+                'contents' => file_get_contents($filepath),
+            ];
+        }
+
+        $screenshotId = Diffy::multipartRequest('POST', 'projects/' . $projectId . '/create-custom-snapshot', $data);
+
+        $this->io()->write($screenshotId);
+
+        // Successful exit.
+        return new ResultData();
+    }
+
+    /**
      * Sets a new baseline from a screenshot ID.
      *
      * @command screenshot:set-baseline
