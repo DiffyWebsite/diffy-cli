@@ -1,8 +1,8 @@
 basic:
     name: 'Desk'
     environments:
-        production: 'https://wordpress.diffy.website'
-        staging: 'http://stage.wordpress.diffy.website'
+        production: 'https://demo.diffy.website/'
+        staging: 'https://demo-staging.diffy.website/'
         development: ''
     breakpoints:
         - 640
