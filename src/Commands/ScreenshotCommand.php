@@ -250,40 +250,53 @@ class ScreenshotCommand extends Tasks
             throw new InvalidArgumentException();
         }
 
-        $files = array_values(array_filter(
-            scandir($folderPath),
-            function ($file) use ($folderPath) {
-                $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
-                return in_array($ext, ['png', 'webp']) && is_file($folderPath . DIRECTORY_SEPARATOR . $file);
-            }
-        ));
+        $basePath = realpath($folderPath);
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($basePath, \RecursiveDirectoryIterator::SKIP_DOTS)
+        );
 
-        if (empty($files)) {
+        // Collect [filepath => url] sorted by relative path for deterministic ordering.
+        $found = [];
+        foreach ($iterator as $fileInfo) {
+            $ext = strtolower($fileInfo->getExtension());
+            if (!in_array($ext, ['png', 'webp'])) {
+                continue;
+            }
+            $filepath = $fileInfo->getPathname();
+            $relativePath = ltrim(substr($filepath, strlen($basePath)), DIRECTORY_SEPARATOR);
+            // Build URL: replace directory separators with "-", strip extension, make URL-safe.
+            $withoutExt = pathinfo(str_replace(DIRECTORY_SEPARATOR, '-', $relativePath), PATHINFO_FILENAME);
+            $urlSlug = strtolower(preg_replace('/[^a-zA-Z0-9]+/', '-', $withoutExt));
+            $found[$relativePath] = ['filepath' => $filepath, 'url' => '/' . $urlSlug];
+        }
+        ksort($found);
+        $found = array_values($found);
+
+        if (empty($found)) {
             $this->io()->write(sprintf('No PNG/WebP images found in folder: %s', $folderPath));
             throw new InvalidArgumentException();
         }
 
         $data = [
-            ['name' => 'snapshotName', 'contents' => basename(realpath($folderPath))],
+            ['name' => 'snapshotName', 'contents' => basename($basePath)],
             ['name' => 'functionalTest', 'contents' => '1'],
         ];
 
-        foreach ($files as $key => $filename) {
-            $filepath = $folderPath . DIRECTORY_SEPARATOR . $filename;
+        foreach ($found as $key => $item) {
+            $filepath = $item['filepath'];
             $imageSize = getimagesize($filepath);
             if ($imageSize === false) {
-                $this->io()->write(sprintf('Could not read image dimensions for file: %s', $filename));
+                $this->io()->write(sprintf('Could not read image dimensions for file: %s', $filepath));
                 throw new InvalidArgumentException();
             }
             $width = $imageSize[0];
-            $url = '/' . pathinfo($filename, PATHINFO_FILENAME);
 
             $data[] = ['name' => 'breakpoints[' . $key . ']', 'contents' => (string) $width];
-            $data[] = ['name' => 'urls[' . $key . ']', 'contents' => $url];
+            $data[] = ['name' => 'urls[' . $key . ']', 'contents' => $item['url']];
             $data[] = [
                 'Content-type' => 'multipart/form-data',
                 'name' => 'files[' . $key . ']',
-                'filename' => $filename,
+                'filename' => basename($filepath),
                 'contents' => file_get_contents($filepath),
             ];
         }
