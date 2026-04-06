@@ -13,6 +13,7 @@ use function GuzzleHttp\json_decode;
 
 class ScreenshotCommand extends Tasks
 {
+    const UPLOAD_BATCH_SIZE = 10;
     /**
      * Create a screenshot from environment
      *
@@ -277,31 +278,51 @@ class ScreenshotCommand extends Tasks
             throw new InvalidArgumentException();
         }
 
-        $data = [
-            ['name' => 'snapshotName', 'contents' => basename($basePath)],
-            ['name' => 'functionalTest', 'contents' => '1'],
-        ];
+        $batches = array_chunk($found, self::UPLOAD_BATCH_SIZE);
 
-        foreach ($found as $key => $item) {
-            $filepath = $item['filepath'];
-            $imageSize = getimagesize($filepath);
-            if ($imageSize === false) {
-                $this->io()->write(sprintf('Could not read image dimensions for file: %s', $filepath));
-                throw new InvalidArgumentException();
-            }
-            $width = $imageSize[0];
+        $progressBar = $this->io()->createProgressBar(count($found));
+        $progressBar->setFormat(' %current%/%max% [%bar%] %percent:3s%%');
+        $progressBar->start();
 
-            $data[] = ['name' => 'breakpoints[' . $key . ']', 'contents' => (string) $width];
-            $data[] = ['name' => 'urls[' . $key . ']', 'contents' => $item['url']];
-            $data[] = [
-                'Content-type' => 'multipart/form-data',
-                'name' => 'files[' . $key . ']',
-                'filename' => basename($filepath),
-                'contents' => file_get_contents($filepath),
+        $screenshotId = null;
+        foreach ($batches as $batchIndex => $batch) {
+            $data = [
+                ['name' => 'snapshotName', 'contents' => basename($basePath)],
+                ['name' => 'functionalTest', 'contents' => '1'],
             ];
+
+            foreach ($batch as $key => $item) {
+                $filepath = $item['filepath'];
+                $imageSize = getimagesize($filepath);
+                if ($imageSize === false) {
+                    $progressBar->finish();
+                    $this->io()->newLine();
+                    $this->io()->write(sprintf('Could not read image dimensions for file: %s', $filepath));
+                    throw new InvalidArgumentException();
+                }
+                $width = $imageSize[0];
+
+                $data[] = ['name' => 'breakpoints[' . $key . ']', 'contents' => (string) $width];
+                $data[] = ['name' => 'urls[' . $key . ']', 'contents' => $item['url']];
+                $data[] = [
+                    'Content-type' => 'multipart/form-data',
+                    'name' => 'files[' . $key . ']',
+                    'filename' => basename($filepath),
+                    'contents' => file_get_contents($filepath),
+                ];
+            }
+
+            if ($batchIndex === 0) {
+                $screenshotId = Diffy::multipartRequest('POST', 'projects/' . $projectId . '/create-custom-snapshot', $data);
+            } else {
+                Diffy::multipartRequest('POST', 'snapshots/' . $screenshotId, $data);
+            }
+
+            $progressBar->advance(count($batch));
         }
 
-        $screenshotId = Diffy::multipartRequest('POST', 'projects/' . $projectId . '/create-custom-snapshot', $data);
+        $progressBar->finish();
+        $this->io()->newLine();
 
         $this->io()->write($screenshotId);
 
