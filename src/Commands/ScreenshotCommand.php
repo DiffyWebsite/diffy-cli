@@ -254,12 +254,12 @@ class ScreenshotCommand extends Tasks
             scandir($folderPath),
             function ($file) use ($folderPath) {
                 $ext = strtolower(pathinfo($file, PATHINFO_EXTENSION));
-                return in_array($ext, ['png', 'jpg', 'jpeg']) && is_file($folderPath . DIRECTORY_SEPARATOR . $file);
+                return in_array($ext, ['png', 'webp']) && is_file($folderPath . DIRECTORY_SEPARATOR . $file);
             }
         ));
 
         if (empty($files)) {
-            $this->io()->write(sprintf('No PNG/JPG images found in folder: %s', $folderPath));
+            $this->io()->write(sprintf('No PNG/WebP images found in folder: %s', $folderPath));
             throw new InvalidArgumentException();
         }
 
