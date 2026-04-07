@@ -24,6 +24,25 @@ $classLoader = require $autoloaderPath;
 
 // Customization variables
 $argv = $_SERVER['argv'];
+
+// Handle --base-url option globally before passing argv to Robo.
+foreach ($argv as $i => $arg) {
+    if (strpos($arg, '--base-url=') === 0) {
+        $baseUrl = rtrim(substr($arg, strlen('--base-url=')), '/') . '/';
+        \Diffy\Diffy::$baseUrl = $baseUrl;
+        \Diffy\Diffy::$client = null;
+        unset($argv[$i]);
+        break;
+    } elseif ($arg === '--base-url' && isset($argv[$i + 1])) {
+        $baseUrl = rtrim($argv[$i + 1], '/') . '/';
+        \Diffy\Diffy::$baseUrl = $baseUrl;
+        \Diffy\Diffy::$client = null;
+        unset($argv[$i], $argv[$i + 1]);
+        break;
+    }
+}
+$argv = array_values($argv);
+
 $appName = "DiffyCli";
 $appVersion = trim(file_get_contents(__DIR__ . '/VERSION'));
 $commandClasses = [

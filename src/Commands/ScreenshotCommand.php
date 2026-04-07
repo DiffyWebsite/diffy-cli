@@ -13,6 +13,7 @@ use function GuzzleHttp\json_decode;
 
 class ScreenshotCommand extends Tasks
 {
+    const UPLOAD_BATCH_SIZE = 10;
     /**
      * Create a screenshot from environment
      *
@@ -222,6 +223,106 @@ class ScreenshotCommand extends Tasks
 
         $screenshotId = $this->createScreenshotInternal($projectId, $environment, $options);
         Screenshot::setBaselineSet($projectId, $screenshotId);
+
+        $this->io()->write($screenshotId);
+
+        // Successful exit.
+        return new ResultData();
+    }
+
+    /**
+     * Create a functional test snapshot from a folder of screenshots
+     *
+     * @command screenshot:create-folder
+     *
+     * @param int    $projectId   ID of the project
+     * @param string $folderPath  Path to the folder containing screenshot images (PNG/JPG)
+     *
+     * @usage screenshot:create-folder 342 ./screenshots Upload screenshots from folder as a functional test snapshot.
+     */
+    public function createFolderScreenshot($projectId, string $folderPath)
+    {
+        $apiKey = Config::getConfig()['key'];
+
+        Diffy::setApiKey($apiKey);
+
+        if (!is_dir($folderPath)) {
+            $this->io()->write(sprintf('Folder not found: %s', $folderPath));
+            throw new InvalidArgumentException();
+        }
+
+        $basePath = realpath($folderPath);
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($basePath, \RecursiveDirectoryIterator::SKIP_DOTS)
+        );
+
+        // Collect [filepath => url] sorted by relative path for deterministic ordering.
+        $found = [];
+        foreach ($iterator as $fileInfo) {
+            $ext = strtolower($fileInfo->getExtension());
+            if (!in_array($ext, ['png', 'webp'])) {
+                continue;
+            }
+            $filepath = $fileInfo->getPathname();
+            $relativePath = ltrim(substr($filepath, strlen($basePath)), DIRECTORY_SEPARATOR);
+            // Build URL: replace directory separators with "-", strip extension, make URL-safe.
+            $withoutExt = pathinfo(str_replace(DIRECTORY_SEPARATOR, '-', $relativePath), PATHINFO_FILENAME);
+            $urlSlug = strtolower(preg_replace('/[^a-zA-Z0-9]+/', '-', $withoutExt));
+            $found[$relativePath] = ['filepath' => $filepath, 'url' => '/' . $urlSlug];
+        }
+        ksort($found);
+        $found = array_values($found);
+
+        if (empty($found)) {
+            $this->io()->write(sprintf('No PNG/WebP images found in folder: %s', $folderPath));
+            throw new InvalidArgumentException();
+        }
+
+        $batches = array_chunk($found, self::UPLOAD_BATCH_SIZE);
+
+        $progressBar = $this->io()->createProgressBar(count($found));
+        $progressBar->setFormat(' %current%/%max% [%bar%] %percent:3s%%');
+        $progressBar->start();
+
+        $screenshotId = null;
+        foreach ($batches as $batchIndex => $batch) {
+            $data = [
+                ['name' => 'snapshotName', 'contents' => basename($basePath)],
+                ['name' => 'functionalTest', 'contents' => '1'],
+            ];
+
+            foreach ($batch as $key => $item) {
+                $filepath = $item['filepath'];
+                $imageSize = getimagesize($filepath);
+                if ($imageSize === false) {
+                    $progressBar->finish();
+                    $this->io()->newLine();
+                    $this->io()->write(sprintf('Could not read image dimensions for file: %s', $filepath));
+                    throw new InvalidArgumentException();
+                }
+                $width = $imageSize[0];
+
+                $data[] = ['name' => 'breakpoints[' . $key . ']', 'contents' => (string) $width];
+                $data[] = ['name' => 'urls[' . $key . ']', 'contents' => $item['url']];
+                $data[] = [
+                    'Content-type' => 'multipart/form-data',
+                    'name' => 'files[' . $key . ']',
+                    'filename' => basename($filepath),
+                    'contents' => file_get_contents($filepath),
+                ];
+            }
+
+            if ($batchIndex === 0) {
+                $screenshotId = Diffy::multipartRequest('POST', 'projects/' . $projectId . '/create-custom-snapshot', $data);
+            } else {
+                Diffy::multipartRequest('POST', 'snapshots/' . $screenshotId, $data);
+            }
+
+            $progressBar->advance(count($batch));
+        }
+
+        $progressBar->finish();
+        $this->io()->newLine();
 
         $this->io()->write($screenshotId);
 
