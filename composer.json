@@ -17,7 +17,8 @@
     "require": {
         "php": "^8.2",
         "ext-json": "*",
-        "consolidation/robo": "^4 || ^5",
+        "consolidation/robo": "^5.1.1",
+        "cweagans/composer-patches": "~2.0",
         "diffywebsite/diffy-php": "^1",
         "guzzlehttp/guzzle": "^7",
         "n98/junit-xml": "^1.1"
@@ -52,11 +53,19 @@
     },
     "config": {
         "optimize-autoloader": true,
-        "sort-packages": true
+        "sort-packages": true,
+        "allow-plugins": {
+            "cweagans/composer-patches": true
+        }
     },
     "extra": {
         "branch-alias": {
             "dev-master": "1.x-dev"
+        },
+        "patches": {
+            "consolidation/robo": {
+                "Fix: Add Symfony Console 7.4+ addCommand() compatibility": "https://patch-diff.githubusercontent.com/raw/consolidation/robo/pull/1185.diff"
+            }
         }
     }
 }

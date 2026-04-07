@@ -1,0 +1,17 @@
+{
+    "_hash": "8d8cb0d8394462ef4cbd87ebd831507eb248f75a5f2cc82d427763924a12e913",
+    "patches": {
+        "consolidation/robo": [
+            {
+                "package": "consolidation/robo",
+                "description": "Fix: Add Symfony Console 7.4+ addCommand() compatibility",
+                "url": "https://patch-diff.githubusercontent.com/raw/consolidation/robo/pull/1185.diff",
+                "sha256": "af8e597fa0ce249f5a49e54f71a69ca8b37c70dcd4571ca13eafc08d568cab2e",
+                "depth": 1,
+                "extra": {
+                    "provenance": "root"
+                }
+            }
+        ]
+    }
+}
