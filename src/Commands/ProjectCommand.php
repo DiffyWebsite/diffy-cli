@@ -257,12 +257,12 @@ class ProjectCommand extends Tasks
         if (!empty($configuration[0]) && is_array($configuration[0]) && !empty($configuration[0]['urls'])) {
             foreach ($configuration as $project_config) {
                 $project_id = Project::createFromData($project_config);
-                $this->getIO()->writeln('[<info>' . $project_id . '</info>] <comment>' . $project_config['name'] . '</comment> created.');
+                $this->getIO()->writeln('[<info>' . $project_id . '</info>] created.');
             }
         } else {
             // Single project.
             $project_id = Project::createFromData($configuration);
-            $this->getIO()->writeln('[<info>' . $project_id . '</info>] <comment>' . $configuration['name'] . '</comment> created.');
+            $this->getIO()->writeln('[<info>' . $project_id . '</info>] created.');
         }
 
         // Successful exit.
