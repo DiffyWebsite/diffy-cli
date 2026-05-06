@@ -75,6 +75,7 @@ class ProjectCommand extends Tasks
      * @option wait Wait for the diff to be completed
      * @option max-wait Maximum number of seconds to wait for the diff to be completed.
      * @option commit-sha GitHub commit SHA.
+     * @option merge-request-iid GitLab merge request IID.
      * @option screenshot1 First existing screenshot
      * @option screenshot2 Second existing screenshot
      *
@@ -90,9 +91,9 @@ class ProjectCommand extends Tasks
         string $env1,
         string $env2,
         array $options = [
-            'wait' => false, 'max-wait' => 1200, 'commit-sha' => null, 'env1Url' => '', 'env1User' => null,
-            'env1Pass' => null, 'env2Url' => '', 'env2User' => null, 'env2Pass' => null, 'name' => '',
-            'screenshot1' => null, 'screenshot2' => null,
+            'wait' => false, 'max-wait' => 1200, 'commit-sha' => null, 'merge-request-iid' => null,
+            'env1Url' => '', 'env1User' => null, 'env1Pass' => null, 'env2Url' => '', 'env2User' => null,
+            'env2Pass' => null, 'name' => '', 'screenshot1' => null, 'screenshot2' => null,
         ]
     ) {
         Diffy::setApiKey(Config::getConfig()['key']);
@@ -110,6 +111,10 @@ class ProjectCommand extends Tasks
 
         if (!empty($options['commit-sha']) && $options['commit-sha']) {
             $params['commitSha'] = $options['commit-sha'];
+        }
+
+        if (!empty($options['merge-request-iid'])) {
+            $params['mergeRequestIid'] = $options['merge-request-iid'];
         }
 
         if ($params['env1'] === 'production') {

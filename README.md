@@ -146,6 +146,14 @@ The only difference you will need to have is to pass commit sha to compare opera
 diffy project:compare PROJECT_ID prod custom --env2Url="https://custom.example.com" --commit-sha="29b872765b21387b7adfd67fd16b7f11942e1a56"
 ```
 
+### GitLab integration
+
+Pass the commit SHA and merge request IID to enable commit statuses and MR comments:
+
+```shell script
+diffy project:compare PROJECT_ID prod custom --env2Url="https://custom.example.com" --commit-sha="$CI_COMMIT_SHA" --merge-request-iid="$CI_MERGE_REQUEST_IID"
+```
+
 ### Examples
 
 Take a look at folder with [Examples](https://github.com/DiffyWebsite/diffy-cli/tree/master/examples). This is a collection
