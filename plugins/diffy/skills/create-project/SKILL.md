@@ -30,7 +30,8 @@ as the project creation input.
 ## Inputs
 
 Required:
-- `base_url`: the production/base URL for the new project, for example `https://www.example.com`.
+- `base_url`: the production/base URL for the new project, for example `https://www.example.com`. This is
+  written to the config as the `production` field (same field name `update-project-settings` uses).
 
 If `base_url` is missing, ask the user for it before creating the config. Do not infer it from examples.
 
@@ -53,7 +54,7 @@ Generated JSON shape:
 {
   "name": "Project name",
   "breakpoints": [640, 1024, 1200],
-  "baseUrl": "https://www.example.com",
+  "production": "https://www.example.com",
   "staging": "https://staging.example.com",
   "development": "",
   "urls": [

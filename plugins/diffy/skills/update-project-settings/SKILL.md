@@ -46,7 +46,7 @@ When the user describes changes instead of providing a file:
 3. Apply only the requested changes while preserving unrelated fields that appear in the fetched settings.
 4. Validate JSON before applying. For YAML, preserve the existing file format if the user supplied YAML.
 
-Common JSON fields (note: update uses `production`, not `baseUrl`):
+Common JSON fields (the base/production URL is the `production` field, same as `create-project`):
 
 ```json
 {
