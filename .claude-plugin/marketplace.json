@@ -1,0 +1,24 @@
+{
+  "name": "diffy",
+  "owner": {
+    "name": "Diffy",
+    "email": "support@diffy.website"
+  },
+  "metadata": {
+    "description": "Diffy visual-regression skills for Claude Code."
+  },
+  "plugins": [
+    {
+      "name": "diffy",
+      "source": "./plugins/diffy",
+      "description": "Create Diffy projects, capture/upload screenshots, and run visual diffs.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Diffy"
+      },
+      "homepage": "https://diffy.website/",
+      "category": "testing",
+      "tags": ["visual-regression", "screenshots", "diffy", "testing", "ui"]
+    }
+  ]
+}
