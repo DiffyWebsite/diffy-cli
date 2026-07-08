@@ -209,6 +209,11 @@ async function stabilize(page, { scroll, settle, freeze }) {
   //    which leaves whole sections blank. Bounded so infinite-scroll pages can't loop forever.
   if (scroll) {
     await page.evaluate(async () => {
+      // Force instant scrolling before we move. With the site's `scroll-behavior: smooth`,
+      // the return-to-top below would animate and `resolve()` fires without awaiting it,
+      // leaving a residual scroll offset that misplaces sticky/fixed navbars and scroll-linked
+      // transforms in the full-page shot. This override persists for the final re-assert too.
+      document.documentElement.style.scrollBehavior = 'auto';
       await new Promise((resolve) => {
         const step = Math.max(200, Math.floor(window.innerHeight * 0.8));
         const cap = 200000; // safety cap in px for infinite-scroll pages
@@ -264,6 +269,19 @@ async function stabilize(page, { scroll, settle, freeze }) {
   if (freeze) {
     await freezeMotion(page);
     await waitForVisualStability(page, { timeout: settle });
+  } else {
+    await page.waitForTimeout(500);
+  }
+
+  // 6. Re-assert the top of the page as the very last thing before capture. The scroll pass
+  //    can leave a residual offset, and scroll-driven UI reacts to it — sticky/fixed navbars
+  //    (which a full-page screenshot then paints floating mid-image) and `useScroll`-linked
+  //    transforms. scroll-behavior was set to `auto` in step 1, so this lands instantly; then
+  //    let the scroll listeners re-render (e.g. a navbar flipping back from fixed to relative)
+  //    and any resulting reveal settle before the shot.
+  await page.evaluate(() => window.scrollTo(0, 0));
+  if (freeze) {
+    await waitForVisualStability(page, { timeout: Math.min(settle, 3000) });
   } else {
     await page.waitForTimeout(500);
   }

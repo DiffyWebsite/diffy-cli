@@ -12,7 +12,7 @@
       "name": "diffy",
       "source": "./plugins/diffy",
       "description": "Create Diffy projects, capture/upload screenshots, and run visual diffs.",
-      "version": "1.0.2",
+      "version": "1.0.3",
       "author": {
         "name": "Diffy"
       },
