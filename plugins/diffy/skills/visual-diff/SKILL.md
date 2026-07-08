@@ -159,8 +159,12 @@ views changed; largest: `/pricing` @ 375px (12.4%). Report: <diffSharedUrl>".
 
 - **Re-baseline:** running Phase A again overwrites the baseline. To force a fresh start, delete
   `.diffy-visual/state.json` (and optionally `.diffy-visual/`).
-- **Noisy diffs** (animations, fonts, lazy content): re-capture with the script's tuning flags
-  `--delay=<ms>` and/or `--wait-selector="<css>"`. Keep `pages`/`breakpoints` identical across phases.
+- **Lazy content / partial pages:** the capture script already scrolls the full page to trigger
+  `loading="lazy"` / IntersectionObserver content and waits for fonts + images before shooting, so
+  below-the-fold content should render. If a slow page still captures early, raise `--settle=<ms>`
+  (default `15000`). For infinite-scroll pages, add `--no-scroll` so the scroll pass doesn't loop.
+- **Noisy diffs** (animations, transitions): re-capture with `--delay=<ms>` (a final settle after content
+  loads) and/or `--wait-selector="<css>"`. Keep `pages`/`breakpoints` identical across phases.
 - **Async diffs:** without `--wait`, `diff:create` returns immediately and Diffy finishes in the
   background; poll with `diffy diff:get-status <DIFF_ID>`. This skill uses `--wait` by default.
 - **Cloud dependency:** this skill uses the Diffy service — it needs an account, an API key, and a project.
