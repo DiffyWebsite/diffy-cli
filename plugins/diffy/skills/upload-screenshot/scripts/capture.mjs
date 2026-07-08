@@ -11,9 +11,10 @@
  * appear at multiple breakpoints, exactly as Diffy's Screenshot::createUpload expects.
  *
  * Before each full-page capture the script "stabilizes" the page: it scrolls top->bottom to trigger
- * lazy-loaded content (images with loading="lazy" / IntersectionObserver), then waits for web fonts
- * and images to finish. This is the real fix for "content didn't load fully" — a bigger --delay alone
- * never helps because lazy loading is scroll-triggered, not time-triggered.
+ * lazy-loaded content and on-scroll reveal animations (images with loading="lazy" /
+ * IntersectionObserver / hydrated islands), waits for network to go idle, then waits for web fonts
+ * and image decode, plus a short reveal-settle. This is the real fix for "content didn't load fully"
+ * — a bigger --delay alone never helps because lazy loading is scroll-triggered, not time-triggered.
  *
  * Usage:
  *   node capture.mjs --url=http://localhost:3000 --pages=/,/about \
@@ -26,6 +27,8 @@
 import { mkdir, writeFile, rm } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
+import { createRequire } from 'node:module';
+import { pathToFileURL } from 'node:url';
 
 // ---- arg parsing -----------------------------------------------------------
 function parseArgs(argv) {
@@ -74,10 +77,38 @@ if (breakpoints.length === 0) {
 }
 
 // ---- playwright import (friendly error if missing) -------------------------
-let chromium;
-try {
-  ({ chromium } = await import('playwright'));
-} catch {
+// This script lives in the plugin cache directory, which has no node_modules of its own.
+// A bare `import('playwright')` resolves relative to THIS file, so it fails whenever Playwright
+// is installed as a project dependency (the common case the skill itself recommends) rather than
+// globally. Resolve it from the current working directory (the project the command was run in)
+// first, then fall back to default resolution for a global/plugin-local install.
+async function importChromium(specifier) {
+  const mod = await import(specifier);
+  return mod.chromium ?? mod.default?.chromium ?? null;
+}
+
+async function loadChromium() {
+  // 1. Resolve from the project's node_modules (based on cwd), not the plugin dir.
+  try {
+    const requireFromCwd = createRequire(path.join(process.cwd(), 'package.json'));
+    const entry = requireFromCwd.resolve('playwright');
+    const found = await importChromium(pathToFileURL(entry).href);
+    if (found) return found;
+  } catch {
+    // fall through to default resolution
+  }
+  // 2. Fall back to normal resolution (global install, or playwright next to this script).
+  try {
+    const found = await importChromium('playwright');
+    if (found) return found;
+  } catch {
+    // handled below
+  }
+  return null;
+}
+
+const chromium = await loadChromium();
+if (!chromium) {
   console.error(
     'Error: Playwright is not installed.\n' +
       'Install it once in this project (or globally):\n' +
@@ -93,30 +124,45 @@ function slugify(p) {
   return cleaned.replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-+|-+$/g, '').toLowerCase();
 }
 
-// stabilize: force lazy content to load, then wait for fonts + images before a full-page capture.
+// stabilize: force lazy content to load, then wait for network/fonts/images before a full-page capture.
 async function stabilize(page, { scroll, settle }) {
-  // 1. Scroll the full page height so IntersectionObserver / loading="lazy" content fetches,
-  //    then return to the top. Bounded so infinite-scroll pages can't loop forever.
+  // 1. Scroll the full page height so IntersectionObserver / loading="lazy" content and
+  //    on-scroll reveal animations trigger, then return to the top. We scroll to ABSOLUTE
+  //    offsets (re-reading the live document height each tick so growth from lazy content is
+  //    followed) and dwell briefly per step so reveals actually fire. Using scrollBy with a
+  //    running counter can terminate early on a still-short page before content expands it,
+  //    which leaves whole sections blank. Bounded so infinite-scroll pages can't loop forever.
   if (scroll) {
     await page.evaluate(async () => {
       await new Promise((resolve) => {
-        let scrolled = 0;
         const step = Math.max(200, Math.floor(window.innerHeight * 0.8));
         const cap = 200000; // safety cap in px for infinite-scroll pages
+        let y = 0;
         const timer = setInterval(() => {
-          window.scrollBy(0, step);
-          scrolled += step;
-          if (scrolled >= document.documentElement.scrollHeight || scrolled >= cap) {
+          window.scrollTo(0, y);
+          y += step;
+          const bottom = Math.max(
+            document.body.scrollHeight,
+            document.documentElement.scrollHeight
+          );
+          if (y >= bottom || y >= cap) {
             clearInterval(timer);
+            window.scrollTo(0, 0);
             resolve();
           }
-        }, 100);
+        }, 150);
       });
-      window.scrollTo(0, 0);
     });
   }
 
-  // 2. Wait for web fonts so text isn't captured mid-swap (bounded by `settle`).
+  // 2. Let network triggered by the scroll (island hydration, lazy images) go idle.
+  try {
+    await page.waitForLoadState('networkidle', { timeout: settle });
+  } catch {
+    // best-effort: continue even if the network never fully quiets
+  }
+
+  // 3. Wait for web fonts so text isn't captured mid-swap (bounded by `settle`).
   await page.evaluate((ms) => {
     if (!document.fonts) return undefined;
     return Promise.race([
@@ -125,23 +171,20 @@ async function stabilize(page, { scroll, settle }) {
     ]);
   }, settle);
 
-  // 3. Wait for every <img> to finish loading or error out (bounded by `settle`).
+  // 4. Force every image to finish decoding, or error out (bounded by `settle`).
   await page.evaluate((ms) => {
     const pending = Array.from(document.images)
       .filter((img) => !(img.complete && img.naturalWidth > 0))
-      .map(
-        (img) =>
-          new Promise((res) => {
-            img.addEventListener('load', res, { once: true });
-            img.addEventListener('error', res, { once: true });
-          })
-      );
+      .map((img) => img.decode().catch(() => {}));
     if (pending.length === 0) return undefined;
     return Promise.race([
       Promise.all(pending).then(() => {}),
       new Promise((r) => setTimeout(r, ms)),
     ]);
   }, settle);
+
+  // 5. Short reveal-settle so scroll-triggered animations land, even when no --delay is given.
+  await page.waitForTimeout(500);
 }
 
 // ---- capture ---------------------------------------------------------------
