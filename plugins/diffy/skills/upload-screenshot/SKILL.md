@@ -66,10 +66,16 @@ If `APP_URL` is missing, ask the user for it. Do not upload existing image files
      --name="<snapshot-name>"
    ```
 
+Lazy-loaded content is handled automatically: before each full-page capture the script scrolls the page
+top→bottom to trigger `loading="lazy"` / IntersectionObserver content, then waits for web fonts and images
+to finish. So if below-the-fold content was previously blank, no extra flags are needed.
+
 Optional tuning flags:
-- `--delay=<ms>` for animations/lazy content
+- `--delay=<ms>` final settle for animations/transitions *after* content has loaded
 - `--wait-selector="<css>"` for app-ready markers
 - `--height=<px>` for viewport height before full-page capture
+- `--settle=<ms>` max wait for fonts and for images to finish (default `15000`)
+- `--no-scroll` disable the auto-scroll pass (use for infinite-scroll pages that never stop growing)
 
 The script writes PNGs and prints the generated `upload.json` path on stdout. Validate that the generated
 payload has equal-length `urls`, `breakpoints`, and `files` arrays, then upload that path with:

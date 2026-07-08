@@ -10,10 +10,17 @@
  * The upload.json uses index-aligned arrays (urls / breakpoints / files) so a single page can
  * appear at multiple breakpoints, exactly as Diffy's Screenshot::createUpload expects.
  *
+ * Before each full-page capture the script "stabilizes" the page: it scrolls top->bottom to trigger
+ * lazy-loaded content (images with loading="lazy" / IntersectionObserver), then waits for web fonts
+ * and images to finish. This is the real fix for "content didn't load fully" — a bigger --delay alone
+ * never helps because lazy loading is scroll-triggered, not time-triggered.
+ *
  * Usage:
  *   node capture.mjs --url=http://localhost:3000 --pages=/,/about \
  *                    --breakpoints=375,1280,1920 --out=<output-dir> \
- *                    --name="baseline-2026-07-06" [--delay=500] [--wait-selector="#app"] [--height=900]
+ *                    --name="baseline-2026-07-06" \
+ *                    [--delay=500] [--wait-selector="#app"] [--height=900] \
+ *                    [--settle=15000] [--no-scroll]
  */
 
 import { mkdir, writeFile, rm } from 'node:fs/promises';
@@ -52,6 +59,10 @@ const name = args.name && args.name !== true ? String(args.name) : `snapshot-${D
 const delayMs = args.delay ? parseInt(String(args.delay), 10) : 0;
 const waitSelector = args['wait-selector'] && args['wait-selector'] !== true ? String(args['wait-selector']) : null;
 const viewportHeight = args.height ? parseInt(String(args.height), 10) : 900;
+// Max time (ms) to wait for fonts and for images to finish, each bounded independently.
+const settleMs = args.settle ? parseInt(String(args.settle), 10) : 15000;
+// Auto-scroll top->bottom to trigger lazy content. Disable with --no-scroll for infinite-scroll pages.
+const autoScroll = !args['no-scroll'];
 
 if (pages.length === 0) {
   console.error('Error: no valid --pages provided.');
@@ -80,6 +91,57 @@ function slugify(p) {
   const cleaned = p.replace(/^\/+|\/+$/g, '');
   if (cleaned === '') return 'home';
   return cleaned.replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-+|-+$/g, '').toLowerCase();
+}
+
+// stabilize: force lazy content to load, then wait for fonts + images before a full-page capture.
+async function stabilize(page, { scroll, settle }) {
+  // 1. Scroll the full page height so IntersectionObserver / loading="lazy" content fetches,
+  //    then return to the top. Bounded so infinite-scroll pages can't loop forever.
+  if (scroll) {
+    await page.evaluate(async () => {
+      await new Promise((resolve) => {
+        let scrolled = 0;
+        const step = Math.max(200, Math.floor(window.innerHeight * 0.8));
+        const cap = 200000; // safety cap in px for infinite-scroll pages
+        const timer = setInterval(() => {
+          window.scrollBy(0, step);
+          scrolled += step;
+          if (scrolled >= document.documentElement.scrollHeight || scrolled >= cap) {
+            clearInterval(timer);
+            resolve();
+          }
+        }, 100);
+      });
+      window.scrollTo(0, 0);
+    });
+  }
+
+  // 2. Wait for web fonts so text isn't captured mid-swap (bounded by `settle`).
+  await page.evaluate((ms) => {
+    if (!document.fonts) return undefined;
+    return Promise.race([
+      document.fonts.ready.then(() => {}),
+      new Promise((r) => setTimeout(r, ms)),
+    ]);
+  }, settle);
+
+  // 3. Wait for every <img> to finish loading or error out (bounded by `settle`).
+  await page.evaluate((ms) => {
+    const pending = Array.from(document.images)
+      .filter((img) => !(img.complete && img.naturalWidth > 0))
+      .map(
+        (img) =>
+          new Promise((res) => {
+            img.addEventListener('load', res, { once: true });
+            img.addEventListener('error', res, { once: true });
+          })
+      );
+    if (pending.length === 0) return undefined;
+    return Promise.race([
+      Promise.all(pending).then(() => {}),
+      new Promise((r) => setTimeout(r, ms)),
+    ]);
+  }, settle);
 }
 
 // ---- capture ---------------------------------------------------------------
@@ -124,6 +186,13 @@ async function main() {
             console.error(`Warning: selector "${waitSelector}" not found on ${targetUrl} @ ${width}px.`);
           }
         }
+        // Trigger lazy content and wait for fonts/images before the full-page capture.
+        try {
+          await stabilize(page, { scroll: autoScroll, settle: settleMs });
+        } catch (err) {
+          console.error(`Warning: stabilize step failed for ${targetUrl} @ ${width}px — continuing.`);
+        }
+        // Optional final settle for animations/transitions after content has loaded.
         if (delayMs > 0) await page.waitForTimeout(delayMs);
 
         const filename = `${slug}-${width}.png`;
