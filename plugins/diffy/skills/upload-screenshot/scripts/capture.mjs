@@ -13,15 +13,24 @@
  * Before each full-page capture the script "stabilizes" the page: it scrolls top->bottom to trigger
  * lazy-loaded content and on-scroll reveal animations (images with loading="lazy" /
  * IntersectionObserver / hydrated islands), waits for network to go idle, then waits for web fonts
- * and image decode, plus a short reveal-settle. This is the real fix for "content didn't load fully"
- * — a bigger --delay alone never helps because lazy loading is scroll-triggered, not time-triggered.
+ * and image decode. This is the real fix for "content didn't load fully" — a bigger --delay alone
+ * never helps because lazy loading is scroll-triggered, not time-triggered.
+ *
+ * It then "freezes" motion so repeated captures of an unchanged UI are byte-stable (the default):
+ *   - the browser context emulates `prefers-reduced-motion: reduce`, so app code that respects it
+ *     (framer-motion / motion, embla autoplay, auto-advancing sliders) renders its static end state;
+ *   - a stylesheet disables all CSS `animation`/`transition` and hides the caret, freezing infinite
+ *     animations (marquees, pings, animated gradients) at their base frame;
+ *   - <video> elements are paused and rewound;
+ *   - finally it waits until the page stops changing frame-to-frame, so JS spring/entrance animations
+ *     have settled before the screenshot. Disable all of this with --no-freeze.
  *
  * Usage:
  *   node capture.mjs --url=http://localhost:3000 --pages=/,/about \
  *                    --breakpoints=375,1280,1920 --out=<output-dir> \
  *                    --name="baseline-2026-07-06" \
  *                    [--delay=500] [--wait-selector="#app"] [--height=900] \
- *                    [--settle=15000] [--no-scroll]
+ *                    [--settle=15000] [--no-scroll] [--no-freeze]
  */
 
 import { mkdir, writeFile, rm } from 'node:fs/promises';
@@ -29,6 +38,7 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
+import crypto from 'node:crypto';
 
 // ---- arg parsing -----------------------------------------------------------
 function parseArgs(argv) {
@@ -66,6 +76,10 @@ const viewportHeight = args.height ? parseInt(String(args.height), 10) : 900;
 const settleMs = args.settle ? parseInt(String(args.settle), 10) : 15000;
 // Auto-scroll top->bottom to trigger lazy content. Disable with --no-scroll for infinite-scroll pages.
 const autoScroll = !args['no-scroll'];
+// Freeze animations (emulate prefers-reduced-motion, disable CSS animations/transitions, pause video)
+// and wait for the page to stop changing before capturing. This is what makes repeated captures of the
+// same UI byte-stable. Disable with --no-freeze for pages that must be captured mid-animation.
+const freezeAnimations = !args['no-freeze'];
 
 if (pages.length === 0) {
   console.error('Error: no valid --pages provided.');
@@ -124,8 +138,69 @@ function slugify(p) {
   return cleaned.replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-+|-+$/g, '').toLowerCase();
 }
 
+// freezeMotion: stop the animation sources that make two captures of the same UI differ.
+//   1. A stylesheet kills every CSS animation/transition and hides the caret, so infinite CSS
+//      animations (marquees, `animate-ping`, animated gradients) render at their base frame instead
+//      of a random one. Injected into <head> so it survives React re-renders.
+//   2. <video> elements are paused and rewound to frame 0.
+// JS-driven motion (framer-motion / motion, embla autoplay, auto-nudging sliders) is handled upstream
+// by emulating `prefers-reduced-motion: reduce` on the browser context — app code that respects the
+// query renders its static end state — and by waitForVisualStability() below for anything that still
+// animates on mount.
+async function freezeMotion(page) {
+  await page
+    .addStyleTag({
+      content: `*, *::before, *::after {
+        animation: none !important;
+        transition: none !important;
+        caret-color: transparent !important;
+        scroll-behavior: auto !important;
+      }`,
+    })
+    .catch(() => {});
+  await page
+    .evaluate(() => {
+      document.querySelectorAll('video').forEach((v) => {
+        try {
+          v.autoplay = false;
+          v.loop = false;
+          v.pause();
+          v.currentTime = 0;
+        } catch {
+          /* ignore individual media errors */
+        }
+      });
+    })
+    .catch(() => {});
+}
+
+// waitForVisualStability: poll viewport screenshots until two consecutive frames are identical (JS
+// spring / entrance animations have landed), bounded by `timeout`. This converges only because
+// freezeMotion() has already stopped the infinite CSS animations that would otherwise never settle.
+async function waitForVisualStability(page, { timeout, interval = 250, stableFrames = 2 }) {
+  const deadline = Date.now() + timeout;
+  let lastHash = null;
+  let stable = 0;
+  while (Date.now() < deadline) {
+    let hash;
+    try {
+      const buf = await page.screenshot(); // viewport only — fast
+      hash = crypto.createHash('sha1').update(buf).digest('hex');
+    } catch {
+      return; // page/screenshot unavailable: don't block the capture
+    }
+    if (hash === lastHash) {
+      if (++stable >= stableFrames) return;
+    } else {
+      stable = 0;
+      lastHash = hash;
+    }
+    await page.waitForTimeout(interval);
+  }
+}
+
 // stabilize: force lazy content to load, then wait for network/fonts/images before a full-page capture.
-async function stabilize(page, { scroll, settle }) {
+async function stabilize(page, { scroll, settle, freeze }) {
   // 1. Scroll the full page height so IntersectionObserver / loading="lazy" content and
   //    on-scroll reveal animations trigger, then return to the top. We scroll to ABSOLUTE
   //    offsets (re-reading the live document height each tick so growth from lazy content is
@@ -183,8 +258,15 @@ async function stabilize(page, { scroll, settle }) {
     ]);
   }, settle);
 
-  // 5. Short reveal-settle so scroll-triggered animations land, even when no --delay is given.
-  await page.waitForTimeout(500);
+  // 5. Freeze remaining motion, then wait for the page to stop changing so JS spring/entrance
+  //    animations land — this is what makes repeated captures byte-stable. When --no-freeze is set,
+  //    fall back to a short flat reveal-settle so scroll-triggered animations still get a moment.
+  if (freeze) {
+    await freezeMotion(page);
+    await waitForVisualStability(page, { timeout: settle });
+  } else {
+    await page.waitForTimeout(500);
+  }
 }
 
 // ---- capture ---------------------------------------------------------------
@@ -199,7 +281,12 @@ async function main() {
 
   const browser = await chromium.launch();
   try {
-    const context = await browser.newContext();
+    // reducedMotion:'reduce' makes app code that honors the media query (framer-motion / motion,
+    // embla autoplay, auto-advancing sliders) render its static end state, a prerequisite for
+    // deterministic captures. Skipped only when the caller opts out of freezing.
+    const context = await browser.newContext(
+      freezeAnimations ? { reducedMotion: 'reduce' } : {}
+    );
     for (const pageEntry of pages) {
       // Page entries may come from `diffy project:get` as absolute URLs
       // (e.g. https://prod.example.com/faq) or as plain paths (/faq). Either way we
@@ -231,7 +318,7 @@ async function main() {
         }
         // Trigger lazy content and wait for fonts/images before the full-page capture.
         try {
-          await stabilize(page, { scroll: autoScroll, settle: settleMs });
+          await stabilize(page, { scroll: autoScroll, settle: settleMs, freeze: freezeAnimations });
         } catch (err) {
           console.error(`Warning: stabilize step failed for ${targetUrl} @ ${width}px — continuing.`);
         }
