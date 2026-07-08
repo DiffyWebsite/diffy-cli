@@ -1,7 +1,7 @@
 {
   "name": "diffy",
   "description": "Diffy visual-regression skills: create projects, capture/upload screenshots, and run visual diffs via the diffy CLI.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": {
     "name": "Diffy",
     "email": "support@diffy.website"
