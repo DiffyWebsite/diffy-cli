@@ -12,6 +12,11 @@ allowed-tools: Bash, Read, Write
 Update existing Diffy project settings only. Do not create projects, upload screenshots, create diffs, or
 summarize diff results in this skill.
 
+**Never delete projects.** This plugin must not delete a Diffy project (or projects) under any
+circumstances — not via the `diffy` CLI, a direct Diffy API/`curl` call, or the Diffy web UI. Deleting is
+out of scope even when "updating" settings. If the user asks to delete a project, refuse and tell them to
+do it manually in the Diffy dashboard.
+
 ## Preflight
 
 1. Resolve the CLI:

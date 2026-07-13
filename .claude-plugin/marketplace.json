@@ -9,16 +9,28 @@
   },
   "plugins": [
     {
-      "name": "diffy",
-      "source": "./plugins/diffy",
-      "description": "Create Diffy projects, capture/upload screenshots, and run visual diffs.",
-      "version": "1.0.3",
+      "name": "diffy-local",
+      "source": "./plugins/diffy-local",
+      "description": "Capture screenshots of a running app locally with the diffy-worker engine and upload them to Diffy.",
+      "version": "1.0.0",
       "author": {
         "name": "Diffy"
       },
       "homepage": "https://diffy.website/",
       "category": "testing",
-      "tags": ["visual-regression", "screenshots", "diffy", "testing", "ui"]
+      "tags": ["visual-regression", "screenshots", "diffy", "testing", "ui", "local", "playwright"]
+    },
+    {
+      "name": "diffy-remote",
+      "source": "./plugins/diffy-remote",
+      "description": "Run Diffy screenshots and environment diffs remotely on Diffy's servers (no local browser).",
+      "version": "1.0.0",
+      "author": {
+        "name": "Diffy"
+      },
+      "homepage": "https://diffy.website/",
+      "category": "testing",
+      "tags": ["visual-regression", "screenshots", "diffy", "testing", "ui", "remote", "ci"]
     }
   ]
 }

@@ -1,0 +1,11 @@
+{
+  "name": "diffy-remote",
+  "description": "Run Diffy screenshots and environment diffs remotely on Diffy's servers (no local browser or Playwright): screenshot an environment, compare two environments, create projects, and read diffs via the diffy CLI.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Diffy",
+    "email": "support@diffy.website"
+  },
+  "homepage": "https://diffy.website/",
+  "license": "MIT"
+}
