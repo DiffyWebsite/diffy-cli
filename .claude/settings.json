@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "permissions": {
+    "deny": [
+      "Bash(diffy project:delete:*)",
+      "Bash(diffy projects:delete:*)",
+      "Bash(diffy project:remove:*)",
+      "Bash(diffy projects:remove:*)",
+      "Bash(diffy screenshot:delete:*)",
+      "Bash(diffy diff:delete:*)",
+      "Bash(./vendor/bin/diffy project:delete:*)",
+      "Bash(./vendor/bin/diffy projects:delete:*)",
+      "Bash(./vendor/bin/diffy project:remove:*)",
+      "Bash(./vendor/bin/diffy projects:remove:*)",
+      "Bash(./vendor/bin/diffy screenshot:delete:*)",
+      "Bash(./vendor/bin/diffy diff:delete:*)"
+    ]
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "diffy-local",
+  "description": "Capture screenshots of a running app locally with the diffy-worker engine (Diffy's production screenshot pipeline, run on your machine) and upload them to Diffy: create projects, upload screenshot sets, and run visual diffs via the diffy CLI.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Diffy",
+    "email": "support@diffy.website"
+  },
+  "homepage": "https://diffy.website/",
+  "license": "MIT"
+}

@@ -21,42 +21,31 @@ diffy project:get <PROJECT_ID>          # full project settings as JSON
 diffy project:list                       # JSON list of projects (find a PROJECT_ID)
 ```
 
-The skill sources what to screenshot from `project:get` — no config file. Fields used:
-- `breakpoints` — array of viewport widths.
-- `urls` — the page list. Entries may be absolute URLs (`https://prod.site/faq`) or paths (`/faq`); the
-  capture script uses only the path portion and re-bases it onto the local dev URL.
-- `production` / `staging` / `development` — environment base URLs (used to suggest a default local URL).
+You do **not** pass pages/breakpoints to the capture step — the diffy-worker engine reads them from the
+project itself. `project:get`/`project:list` are only useful here to find a `PROJECT_ID` or to suggest a
+default local URL from the `production`/`staging`/`development` fields.
 
-## Upload local images -> a screenshot set
+## Capture a running app locally + upload -> a screenshot set
 
 ```bash
-diffy screenshot:create-uploaded <PROJECT_ID> <upload.json>   # prints SCREENSHOT_ID
+SCREENSHOT_ID=$(node "$PLUGIN_DIR/scripts/run-worker.mjs" \
+  --project-id=<PROJECT_ID> --url="http://localhost:3000" --name="baseline-<timestamp>")
 ```
 
-`upload.json` is **generated automatically** by the skill's `scripts/capture.mjs` — you never author it.
-Shape (index-aligned arrays — `files[i]` is the screenshot of `urls[i]` at `breakpoints[i]`):
+`run-worker.mjs` delegates to the `diffy-worker` project's local runner (`diffy-screenshots.js`), which
+uses Diffy's **production** rendering pipeline: it fetches the project's pages, breakpoints, and advanced
+settings, re-bases each page onto `--url`, captures every page × breakpoint on the host with Playwright,
+uploads the set, and returns a `SCREENSHOT_ID`. Progress goes to stderr; stdout is just the numeric ID.
 
-```json
-{
-  "snapshotName": "baseline-20260701-120000",
-  "urls":        ["/", "/", "/about", "/about"],
-  "breakpoints": [375, 1280, 375, 1280],
-  "files":       ["/abs/home-375.png", "/abs/home-1280.png", "/abs/about-375.png", "/abs/about-1280.png"]
-}
-```
+- The worker locates its checkout via `DIFFY_WORKER_DIR` (or a `diffy-worker/` / `../diffy-worker/`
+  sibling), reads the API key from `~/.diffy-cli/diffy-cli.yaml`, and uploads via the same
+  `create-custom-snapshot` endpoint the CLI's `screenshot:create-uploaded` uses — so the returned ID is a
+  normal Diffy screenshot ID you feed straight into `diff:create`.
+- Because capture and upload happen inside the worker, the plugin never builds an `upload.json` by hand
+  and never calls `diffy screenshot:create-uploaded` for this flow.
 
-- `snapshotName` — auto-generated label (e.g. `baseline-<timestamp>`); internal, not user-facing.
-- `files` — absolute paths to the PNGs the capture script just wrote; validated to exist by the API SDK.
-- Rules enforced by `Screenshot::createUpload`: `snapshotName` non-empty; `urls`/`breakpoints`/`files`
-  present and **equal length**.
-
-The uploaded set is a self-contained snapshot; the project's own configured URLs/breakpoints aren't used at
-upload time — the diff is purely between the two uploaded image sets. The skill still reads them from
-`project:get` so the captured pages/breakpoints match what the project expects.
-
-> Why `create-uploaded` and not `screenshot:create-folder`: `create-folder` derives the URL slug from the
-> filename, so `home-375.png` and `home-1280.png` become two *different* URLs. `create-uploaded` lets one
-> page appear at several breakpoints, which is what we want for a diff.
+> `diffy screenshot:create-uploaded <PROJECT_ID> <upload.json>` still exists in the CLI for pre-built image
+> sets, but the local flow no longer uses it — the worker owns capture + upload end to end.
 
 ## Create a diff between two screenshot sets
 
