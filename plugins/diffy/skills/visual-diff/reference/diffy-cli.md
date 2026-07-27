@@ -21,8 +21,8 @@ diffy project:get <PROJECT_ID>          # full project settings as JSON
 diffy project:list                       # JSON list of projects (find a PROJECT_ID)
 ```
 
-You do **not** pass pages/breakpoints to the capture step — the diffy-worker engine reads them from the
-project itself. `project:get`/`project:list` are only useful here to find a `PROJECT_ID` or to suggest a
+You do **not** pass pages/breakpoints to the capture step — the worker (inside the container) reads them
+from the project itself. `project:get`/`project:list` are only useful here to find a `PROJECT_ID` or to suggest a
 default local URL from the `production`/`staging`/`development` fields.
 
 ## Capture a running app locally + upload -> a screenshot set
@@ -32,16 +32,23 @@ SCREENSHOT_ID=$(node "$PLUGIN_DIR/scripts/run-worker.mjs" \
   --project-id=<PROJECT_ID> --url="http://localhost:3000" --name="baseline-<timestamp>")
 ```
 
-`run-worker.mjs` delegates to the `diffy-worker` project's local runner (`diffy-screenshots.js`), which
-uses Diffy's **production** rendering pipeline: it fetches the project's pages, breakpoints, and advanced
-settings, re-bases each page onto `--url`, captures every page × breakpoint on the host with Playwright,
-uploads the set, and returns a `SCREENSHOT_ID`. Progress goes to stderr; stdout is just the numeric ID.
+`run-worker.mjs` runs Diffy's published **screenshot-worker Docker container**
+(`diffywebsite2/screenshot-worker`) — the same **production** rendering runtime (Chromium, fonts, Node,
+Playwright) Diffy uses server-side, so every user renders identically. Inside the container the worker's
+`diffy-screenshots.js` fetches the project's pages, breakpoints, and advanced settings, re-bases each page
+onto `--url`, captures every page × breakpoint with the container's Chromium, uploads the set, and returns
+a `SCREENSHOT_ID`. Progress goes to stderr; stdout is just the numeric ID.
 
-- The worker locates its checkout via `DIFFY_WORKER_DIR` (or a `diffy-worker/` / `../diffy-worker/`
-  sibling), reads the API key from `~/.diffy-cli/diffy-cli.yaml`, and uploads via the same
-  `create-custom-snapshot` endpoint the CLI's `screenshot:create-uploaded` uses — so the returned ID is a
-  normal Diffy screenshot ID you feed straight into `diff:create`.
-- Because capture and upload happen inside the worker, the plugin never builds an `upload.json` by hand
+- **Setup:** `run-worker.mjs --provision` pulls the image, clones the worker code into
+  `~/.cache/diffy/diffy-worker`, and installs its deps **inside** the container (so native modules match
+  the container arch); `--check` validates docker + daemon + image + code + deps + API key. Advanced:
+  `DIFFY_WORKER_DIR` points at a checkout you manage, `DIFFY_WORKER_IMAGE` pins the image tag.
+- The image is runtime-only; the worker code is bind-mounted at `/diffy-worker`. The container reaches
+  the host dev server via `host.docker.internal` — the runner rewrites `localhost`/`127.0.0.1` in `--url`.
+- The worker reads the API key from `~/.diffy-cli/diffy-cli.yaml` (passed into the container) and uploads
+  via the same `create-custom-snapshot` endpoint the CLI's `screenshot:create-uploaded` uses — so the
+  returned ID is a normal Diffy screenshot ID you feed straight into `diff:create`.
+- Because capture and upload happen inside the container, the plugin never builds an `upload.json` by hand
   and never calls `diffy screenshot:create-uploaded` for this flow.
 
 > `diffy screenshot:create-uploaded <PROJECT_ID> <upload.json>` still exists in the CLI for pre-built image

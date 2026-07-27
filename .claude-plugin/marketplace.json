@@ -9,28 +9,20 @@
   },
   "plugins": [
     {
-      "name": "diffy-local",
-      "source": "./plugins/diffy-local",
-      "description": "Capture screenshots of a running app locally with the diffy-worker engine and upload them to Diffy.",
-      "version": "1.0.0",
+      "name": "diffy",
+      "source": "./plugins/diffy",
+      "description": "Diffy visual-regression testing: capture screenshots locally (in Diffy's screenshot-worker Docker container) or remotely on Diffy's servers, create projects, run visual diffs, and read results.",
+      "version": "2.0.0",
       "author": {
         "name": "Diffy"
       },
       "homepage": "https://diffy.website/",
       "category": "testing",
-      "tags": ["visual-regression", "screenshots", "diffy", "testing", "ui", "local", "playwright"]
-    },
-    {
-      "name": "diffy-remote",
-      "source": "./plugins/diffy-remote",
-      "description": "Run Diffy screenshots and environment diffs remotely on Diffy's servers (no local browser).",
-      "version": "1.0.0",
-      "author": {
-        "name": "Diffy"
-      },
-      "homepage": "https://diffy.website/",
-      "category": "testing",
-      "tags": ["visual-regression", "screenshots", "diffy", "testing", "ui", "remote", "ci"]
+      "tags": ["visual-regression", "screenshots", "diffy", "testing", "ui", "local", "remote", "docker", "ci"]
     }
-  ]
+  ],
+  "renames": {
+    "diffy-local": "diffy",
+    "diffy-remote": "diffy"
+  }
 }

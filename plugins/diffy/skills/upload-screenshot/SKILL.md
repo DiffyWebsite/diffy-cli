@@ -1,42 +1,55 @@
 ---
 name: upload-screenshot
 description: >-
-  Capture a running app locally with the diffy-worker screenshot engine (the same rendering
+  Capture a running app locally inside Diffy's screenshot-worker Docker container (the same rendering
   pipeline Diffy runs in production) and upload it to Diffy, returning a screenshot ID. Use when
   the user asks to capture a local or running app for Diffy, upload a current UI screenshot set, or
-  create a Diffy screenshot ID from a live app URL.
+  create a Diffy screenshot ID from a live app URL. This captures on THIS machine; to have Diffy
+  screenshot a deployed environment on its own servers instead, use the remote-screenshot skill. If
+  the user is ambiguous about local vs remote capture, ask.
 allowed-tools: Bash, Read, Write
 ---
 
 # upload-screenshot
 
-Capture a running app with the **diffy-worker** engine, upload the generated screenshot set, and
-return a `SCREENSHOT_ID`. The worker uses Diffy's production rendering pipeline: it reads the
-project's pages, breakpoints, and advanced settings itself, re-bases each page onto your local URL,
-captures every page × breakpoint on the host with Playwright, uploads the set, and returns the ID —
-so there is no local `upload.json` to build and no separate `screenshot:create-uploaded` call.
+Capture a running app inside Diffy's **screenshot-worker Docker container**, upload the generated
+screenshot set, and return a `SCREENSHOT_ID`. The container is Diffy's production rendering runtime: the
+worker reads the project's pages, breakpoints, and advanced settings itself, re-bases each page onto
+your local URL, captures every page × breakpoint with the container's Chromium, uploads the set, and
+returns the ID — so there is no local `upload.json` to build and no separate `screenshot:create-uploaded`
+call. The container reaches your host dev server via `host.docker.internal` (the runner rewrites
+`localhost`/`127.0.0.1` for you).
 
 Do not upload pre-existing image files or pre-built payloads, create a visual diff, or summarize
 diff results in this skill.
 
-`$PLUGIN_DIR` below = the diffy-local plugin root (the folder containing `.claude-plugin/` and
+`$PLUGIN_DIR` below = the diffy plugin root (the folder containing `.claude-plugin/` and
 `scripts/`), i.e. two levels up from this `SKILL.md`.
+
+**Local vs remote (only if unclear):** this skill captures the running app **on this machine** inside
+Diffy's screenshot-worker **Docker container**. Diffy can instead screenshot a deployed environment
+**on its own servers** — that is the `remote-screenshot` skill. If the user hasn't made clear which
+they want, ask whether to capture **local** (here) or **remote** (Diffy captures on app.diffy.website);
+if remote, switch to `remote-screenshot`.
 
 ## Preflight
 
-1. **Capture engine.** Local capture runs the `diffy-worker` project. Check it with:
+1. **Capture engine (Docker).** Local capture runs inside Diffy's published screenshot-worker container
+   (`diffywebsite2/screenshot-worker`) — the same Chromium/fonts/Playwright runtime Diffy uses in
+   production, so every user renders identically. **Docker must be installed and running.** Check the
+   whole setup with:
    ```bash
    node "$PLUGIN_DIR/scripts/run-worker.mjs" --check
    ```
-   If it reports the worker is **not installed**, do a one-time setup: tell the user it will download
-   the capture engine (clones `diffy-worker` + Playwright Chromium, ~150 MB, a couple of minutes),
-   then run:
+   If it reports the setup is incomplete, do a one-time setup: tell the user it will pull the worker
+   image (~1.1 GB) and fetch the worker code, then run:
    ```bash
    node "$PLUGIN_DIR/scripts/run-worker.mjs" --provision
    ```
-   That clones the engine into a cache dir (`~/.cache/diffy-local/diffy-worker`) and installs it;
-   later runs reuse it. Advanced: set `DIFFY_WORKER_DIR` to an existing checkout to skip the download.
-   Surface `run-worker.mjs`'s own messages rather than guessing.
+   That pulls the image, clones the worker code into a cache dir (`~/.cache/diffy/diffy-worker`), and
+   installs its deps **inside** the container; later runs reuse it. Advanced: set `DIFFY_WORKER_DIR` to
+   a worker checkout you manage, or `DIFFY_WORKER_IMAGE` to pin a different image tag. Surface
+   `run-worker.mjs`'s own messages rather than guessing.
 2. **Authentication.** The worker reads the API key from `~/.diffy-cli/diffy-cli.yaml` (or
    `$DIFFYCLI_CONFIG`, or `$DIFFY_API_KEY`). If none exists, run `diffy auth:login <API_KEY>` after
    the user provides the key (from https://app.diffy.website/#/keys).
@@ -56,7 +69,7 @@ uploads existing image files.
    curl -s -o /dev/null -w "%{http_code}" "<APP_URL>"
    ```
    If this returns `000` (no connection), ask the user to start their dev server first.
-2. Capture + upload with the worker engine, capturing the screenshot ID from stdout:
+2. Capture + upload with the worker container, capturing the screenshot ID from stdout:
    ```bash
    SCREENSHOT_ID=$(node "$PLUGIN_DIR/scripts/run-worker.mjs" \
      --project-id=<PROJECT_ID> --url="<APP_URL>" --name="<snapshot-name>")
@@ -87,7 +100,7 @@ Return:
 - project ID
 - snapshot name
 - app URL captured
-- capture source (`running app via diffy-worker`)
+- capture source (`running app via screenshot-worker container`)
 
 Stop there. Tell the user to use `compare-screenshots` when they want to compare this screenshot set.
 

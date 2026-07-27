@@ -4,7 +4,8 @@ description: >-
   Compare two environments of a Diffy project server-side with project:compare — Diffy screenshots both
   environments on its own servers and produces a visual-regression diff, returning a diff ID. Use when the
   user wants to compare prod vs staging, prod vs a custom/PR/UAT URL, or two arbitrary URLs remotely,
-  without capturing anything locally. For comparing a locally running app, use diffy-local's visual-diff.
+  without capturing anything locally. This runs on Diffy's servers; to compare a locally running app on
+  THIS machine instead, use the visual-diff skill. If the user is ambiguous about local vs remote, ask.
 allowed-tools: Bash, Read, Write
 ---
 
@@ -12,7 +13,13 @@ allowed-tools: Bash, Read, Write
 
 Compare two environments of a Diffy project entirely on Diffy's servers and return a `DIFF_ID`. Diffy
 screenshots both sides remotely and diffs them in a single command — nothing is captured on this machine.
-This is the remote analog of `diffy-local`'s `visual-diff`.
+This is the remote analog of the `visual-diff` skill.
+
+**Local vs remote (only if unclear):** this skill captures both sides **remotely on Diffy's servers**
+(app.diffy.website). To compare a running app **on this machine** (baseline → edit → compare), use the
+`visual-diff` skill instead. If the user hasn't said which they want — e.g. a bare "compare my UI" with
+no deployed environments named — ask whether to run **remote** (here) or **local**; if local, switch to
+`visual-diff`.
 
 For exact command syntax and result fields, consult `reference/diffy-cli-remote.md` in this skill folder.
 
