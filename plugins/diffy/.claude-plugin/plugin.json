@@ -1,0 +1,11 @@
+{
+  "name": "diffy",
+  "description": "Diffy visual-regression testing for Claude Code, built on the diffy CLI. Capture screenshots either locally (inside Diffy's published screenshot-worker Docker container, its production rendering runtime) or remotely on Diffy's servers, then create projects, run visual diffs, and read results. When a request doesn't say which, Claude asks whether to run local or remote (app.diffy.website).",
+  "version": "2.0.0",
+  "author": {
+    "name": "Diffy",
+    "email": "support@diffy.website"
+  },
+  "homepage": "https://diffy.website/",
+  "license": "MIT"
+}

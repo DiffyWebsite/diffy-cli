@@ -1,4 +1,4 @@
-# diffy CLI — reference for the diffy-remote skills
+# diffy CLI — reference for the remote skills (compare-environments, remote-screenshot)
 
 Condensed cheat-sheet of the exact `diffy` commands and data shapes the **remote** skills rely on. `diffy`
 wraps the Diffy cloud visual-comparison API; with these commands Diffy captures the screenshots on **its own

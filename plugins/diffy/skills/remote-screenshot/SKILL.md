@@ -4,7 +4,9 @@ description: >-
   Trigger Diffy to capture a screenshot set of a project environment on Diffy's own servers (no local
   browser, no Playwright) with screenshot:create, and return a screenshot ID. Use when the user asks to
   screenshot production/staging/development or a live custom URL remotely, take Diffy screenshots of an
-  environment, or set a new remote baseline. Not for capturing a locally running app — that is diffy-local.
+  environment, or set a new remote baseline. This runs on Diffy's servers; to capture a locally running
+  app on THIS machine instead, use the upload-screenshot skill. If the user is ambiguous about local vs
+  remote capture, ask.
 allowed-tools: Bash, Read, Write
 ---
 
@@ -13,6 +15,11 @@ allowed-tools: Bash, Read, Write
 Ask Diffy to screenshot a project **environment** on its servers and return a `SCREENSHOT_ID`. Nothing is
 captured on this machine — no Playwright, no local dev server. Do not create a diff or summarize diff
 results in this skill.
+
+**Local vs remote (only if unclear):** this skill captures **remotely on Diffy's servers**
+(app.diffy.website). To capture a running app **on this machine** in the screenshot-worker container, use
+the `upload-screenshot` skill instead. If the user hasn't said which they want, ask whether to capture
+**remote** (here) or **local**; if local, switch to `upload-screenshot`.
 
 ## Preflight
 

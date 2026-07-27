@@ -1,20 +1,23 @@
 ---
 name: visual-diff
 description: >-
-  Capture before/after screenshots of a running UI with the diffy-worker engine (the same rendering
-  pipeline Diffy runs in production) and produce a visual-regression diff with the Diffy CLI. Use
+  Capture before/after screenshots of a running UI inside Diffy's screenshot-worker Docker container
+  (the same rendering pipeline Diffy runs in production) and produce a visual-regression diff with the
+  Diffy CLI. Use
   when the user makes UI changes and wants to see what changed visually: run once BEFORE edits to set
   a baseline, then again AFTER edits to compare. Pages, breakpoints, and capture settings come from
   the Diffy project (no config file). Reports % changed per page/breakpoint plus a shareable diff
-  report link. Trigger phrases: "visual diff", "compare the UI", "what changed visually", "screenshot
-  diff", "did my UI change".
+  report link. This captures on THIS machine (a running local app); to compare two already-deployed
+  environments/URLs on Diffy's servers instead, use the compare-environments skill. If the user is
+  ambiguous about whether to capture locally or remotely, ask. Trigger phrases: "visual diff",
+  "compare the UI", "what changed visually", "screenshot diff", "did my UI change".
 allowed-tools: Bash, Read, Write
 ---
 
 # visual-diff
 
-Two-phase visual regression for a running UI, built on the `diffy-worker` capture engine + the
-`diffy` CLI:
+Two-phase visual regression for a running UI, built on Diffy's screenshot-worker Docker container +
+the `diffy` CLI:
 
 1. **Baseline** (run *before* editing): capture the current UI, upload it to Diffy, remember its ID.
 2. **Compare** (run *after* editing): capture again, upload, diff against the baseline, and show what
@@ -25,20 +28,32 @@ fetches them (`getProject`) and re-bases each page onto your local URL. There is
 maintain and no `upload.json` to build; capture and upload happen in one step and return a screenshot
 ID directly, using the same production pipeline that renders Diffy's baselines.
 
-`$PLUGIN_DIR` below = the diffy-local plugin root (the folder containing `.claude-plugin/` and
+`$PLUGIN_DIR` below = the diffy plugin root (the folder containing `.claude-plugin/` and
 `scripts/`), i.e. two levels up from this `SKILL.md`. For exact `diffy` diff syntax and result shapes,
 consult `reference/diffy-cli.md`.
 
 ---
 
+## Step 0 — Local vs remote (only if unclear)
+
+This skill captures the UI **on this machine** inside Diffy's screenshot-worker container (a running
+local dev server). Diffy can also do the whole thing **remotely on its servers** — that is the
+`compare-environments` skill, used to diff two deployed environments/URLs (prod vs staging, a PR URL,
+etc.). If the user's request doesn't make clear which they want — e.g. a bare "compare my UI" with no
+local dev server mentioned — ask whether to run **local** (capture here) or **remote** (Diffy captures
+on app.diffy.website), and if they choose remote, switch to `compare-environments`. When the user
+clearly means their local running app (localhost, "as I edit", "my dev server"), just proceed.
+
 ## Step 1 — Preflight checks (fail fast, print the fix)
 
-- **Capture engine:** local capture runs the `diffy-worker` project. Check it with
-  `node "$PLUGIN_DIR/scripts/run-worker.mjs" --check`. If it reports the worker is **not installed**,
-  tell the user a one-time setup will download the engine (clones `diffy-worker` + Playwright
-  Chromium, ~150 MB), then run `node "$PLUGIN_DIR/scripts/run-worker.mjs" --provision` (it installs
-  into `~/.cache/diffy-local/diffy-worker` and is reused afterward). Advanced: set `DIFFY_WORKER_DIR`
-  to an existing checkout to skip the download.
+- **Capture engine (Docker):** local capture runs inside Diffy's published screenshot-worker container
+  (`diffywebsite2/screenshot-worker`) — the same Chromium/fonts/Playwright runtime Diffy uses in
+  production. **Docker must be installed and running.** Check it with
+  `node "$PLUGIN_DIR/scripts/run-worker.mjs" --check`. If it reports the setup is incomplete, tell the
+  user a one-time setup will pull the worker image (~1.1 GB) and fetch the worker code, then run
+  `node "$PLUGIN_DIR/scripts/run-worker.mjs" --provision` (it pulls the image, clones the worker code
+  into `~/.cache/diffy/diffy-worker`, and installs its deps inside the container; reused afterward).
+  Advanced: `DIFFY_WORKER_DIR` points at a checkout you manage; `DIFFY_WORKER_IMAGE` pins a tag.
 - **Diffy CLI (for the diff step):** `command -v diffy` — if missing, look for `./vendor/bin/diffy`
   in the current repo; else ask the user to install it. Suggested install (pick a bin directory the
   user can write to — `/usr/local/bin` may need `sudo`; Homebrew on Apple Silicon uses
