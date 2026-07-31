@@ -90,11 +90,13 @@ For multiple projects:
 diffy projects:update <multi-project-config.json>
 ```
 
-Verify after updating:
+Verify after updating, showing the result as YAML (readable, not the raw JSON):
 
 ```bash
-diffy project:get <PROJECT_ID>
+diffy project:get-yaml <PROJECT_ID>
 ```
+
+To only view a project's settings without changing anything, use the `get-project-settings` skill.
 
 Return a concise summary:
 - project ID(s)
