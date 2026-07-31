@@ -20,6 +20,7 @@ their namespaced names (`/diffy:<skill>`). **When a request doesn't say where to
 | Skill | Mode | What it does |
 |---|---|---|
 | `/diffy:create-project` | either | Create a new Diffy project from a base URL, pages, and breakpoints. |
+| `/diffy:get-project-settings` | either | Show an existing project's settings as export YAML (readable, not raw JSON). |
 | `/diffy:update-project-settings` | either | Edit an existing project's pages, environments, breakpoints, masks, login, schedule, etc. |
 | `/diffy:upload-screenshot` | local | Capture a running app in the screenshot-worker container and upload it as a Diffy screenshot set. |
 | `/diffy:remote-screenshot` | remote | Ask Diffy to screenshot an environment (production/staging/development or a custom URL) on its servers. |

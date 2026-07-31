@@ -294,6 +294,39 @@ class ProjectCommand extends Tasks
     }
 
     /**
+     * Get project settings as exportable YAML.
+     *
+     * Returns the same YAML the dashboard "Export" button downloads
+     * (the /settings/download/yaml endpoint) — the human-readable
+     * grouped `basic`/`advanced` format, not the raw JSON of project:get.
+     * This is also the format project:update accepts.
+     *
+     * @command project:get-yaml
+     *
+     * @param int $projectId Id of the project.
+     *
+     * @usage project:get-yaml 342
+     *   Prints the settings of project 342 as export YAML.
+     *
+     * @throws InvalidArgumentException
+     */
+    public function getProjectYaml(int $projectId)
+    {
+        Diffy::setApiKey(Config::getConfig()['key']);
+
+        $response = Diffy::getClient()->request(
+            'GET',
+            'projects/' . $projectId . '/settings/download/yaml',
+            ['headers' => ['Authorization' => 'Bearer ' . Diffy::getApiToken()]]
+        );
+
+        $this->getIO()->write($response->getBody()->getContents());
+
+        // Successful exit.
+        return new ResultData();
+    }
+
+    /**
      * Get the list of projects
      *
      * The output is raw JSON.
