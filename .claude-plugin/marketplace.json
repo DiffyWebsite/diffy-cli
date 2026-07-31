@@ -12,7 +12,7 @@
       "name": "diffy",
       "source": "./plugins/diffy",
       "description": "Diffy visual-regression testing: capture screenshots locally (in Diffy's screenshot-worker Docker container) or remotely on Diffy's servers, create projects, run visual diffs, and read results.",
-      "version": "2.0.0",
+      "version": "2.1.0",
       "author": {
         "name": "Diffy"
       },
