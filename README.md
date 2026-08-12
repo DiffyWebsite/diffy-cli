@@ -50,6 +50,14 @@ You can use `--wait` key to wait for the screenshot to be completed.
 
 As a result, you will get an ID of the screenshot.
 
+#### Get screenshot status
+
+```shell script
+diffy screenshot:get-status SCREENSHOT_ID
+```
+
+Prints `1` when the set of screenshots is completed, and nothing while it is still being captured.
+
 #### Compare screenshots (creating diff)
 
 If you know your screenshots IDs the easiest would be:

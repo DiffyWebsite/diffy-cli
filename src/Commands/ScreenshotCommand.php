@@ -109,6 +109,31 @@ class ScreenshotCommand extends Tasks
     }
 
     /**
+     * Get screenshot status
+     *
+     * @command screenshot:get-status
+     *
+     * @param int $screenshotId
+     *
+     * @return mixed
+     *
+     * @throws \Exception
+     *
+     * @usage screenshot:get-status 12345 Get screenshot status.
+     */
+    public function getScreenshotStatus(int $screenshotId)
+    {
+        $apiKey = Config::getConfig()['key'];
+        Diffy::setApiKey($apiKey);
+        $screenshot = Screenshot::retrieve($screenshotId);
+
+        $this->io()->write($screenshot->isCompleted());
+
+        // Successful exit.
+        return new ResultData();
+    }
+
+    /**
      * Get the list of screenshots
      *
      * @command screenshot:list
