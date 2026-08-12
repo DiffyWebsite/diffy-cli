@@ -115,17 +115,43 @@ class ScreenshotCommand extends Tasks
      *
      * @param int $screenshotId
      *
+     * @option format Format of the output (supported: json). Omit it to print 1 when the screenshot set
+     *                is completed and nothing when it is not.
+     *
      * @return mixed
      *
      * @throws \Exception
      *
      * @usage screenshot:get-status 12345 Get screenshot status.
+     * @usage screenshot:get-status 12345 --format=json Get screenshot state and capture progress as JSON.
      */
-    public function getScreenshotStatus(int $screenshotId)
+    public function getScreenshotStatus(int $screenshotId, array $options = ['format' => ''])
     {
+        $format = $options['format'] ?? '';
+
+        if ($format && $format !== 'json') {
+            $this->io()->error('Format value is not supported. Provide the following value: json.');
+            return;
+        }
+
         $apiKey = Config::getConfig()['key'];
         Diffy::setApiKey($apiKey);
         $screenshot = Screenshot::retrieve($screenshotId);
+
+        if ($format === 'json') {
+            $this->io()->write(json_encode([
+                'id' => $screenshotId,
+                'state' => $screenshot->data['state'] ?? null,
+                'completed' => $screenshot->isCompleted(),
+                'name' => $screenshot->data['name'] ?? null,
+                'environment' => $screenshot->data['environment'] ?? null,
+                'executionTime' => $screenshot->data['executionTime'] ?? null,
+                'status' => $screenshot->data['status'] ?? null,
+            ]));
+
+            // Successful exit.
+            return new ResultData();
+        }
 
         $this->io()->write($screenshot->isCompleted());
 

@@ -58,6 +58,19 @@ diffy screenshot:get-status SCREENSHOT_ID
 
 Prints `1` when the set of screenshots is completed, and nothing while it is still being captured.
 
+Add `--format=json` to get the capture state and progress instead:
+
+```shell script
+diffy screenshot:get-status SCREENSHOT_ID --format=json
+```
+
+```json
+{"id":1421873,"state":3,"completed":true,"name":null,"environment":"Production","executionTime":"2min 6s","status":{"results":84,"items":84,"queue":0,"estimate":"under 1 minute","totalTime":126,"jobs":0,"inProgress":0}}
+```
+
+`state` is `-1` stopped, `0` not started, `1` in progress, `2`/`3`/`4` completed. Note that the plain
+output `1` means completed, while `state` of `1` means the capture is still in progress.
+
 #### Compare screenshots (creating diff)
 
 If you know your screenshots IDs the easiest would be:
