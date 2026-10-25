@@ -19,7 +19,7 @@
         "ext-json": "*",
         "consolidation/robo": "^5.1.1",
         "cweagans/composer-patches": "~2.0",
-        "diffywebsite/diffy-php": "^1",
+        "diffywebsite/diffy-php": "^1.5",
         "guzzlehttp/guzzle": "^7",
         "n98/junit-xml": "^1.1"
     },
