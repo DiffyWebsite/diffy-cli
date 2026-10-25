@@ -17,6 +17,8 @@ use Symfony\Component\Yaml\Yaml;
 
 class ProjectCommand extends Tasks
 {
+    use WaitForDiffTrait;
+
     /** @var SymfonyStyle */
     protected $io;
 
@@ -161,23 +163,17 @@ class ProjectCommand extends Tasks
             Diff::updateName($diffId, $options['name']);
         }
 
-        if (!empty($options['wait']) && $options['wait'] == true) {
-            $sleep = 10;
-            sleep($sleep);
-            $i = 0;
-            $diff = Diff::retrieve($diffId);
-            while ($i < (int)$options['max-wait'] / $sleep) {
-                if ($diff->isCompleted()) {
-                    break;
-                }
-                sleep($sleep);
-                $diff->refresh();
+        $this->getIO()->writeln($diffId);
 
-                $i += $sleep;
+        if (!empty($options['wait']) && $options['wait'] == true) {
+            $error = $this->waitForDiff($diffId, (int)$options['max-wait']);
+
+            if ($error) {
+                $this->getIO()->getErrorStyle()->error($error);
+
+                return new ResultData(ResultData::EXITCODE_ERROR);
             }
         }
-
-        $this->getIO()->writeln($diffId);
 
         // Successful exit.
         return new ResultData();
@@ -510,7 +506,8 @@ class ProjectCommand extends Tasks
             foreach ($diffsProgressIds as $projectId => $diffId) {
                 $diffsProgress[$projectId] = Diff::retrieve($diffId);
             }
-            while ($i < (int)$options['max-wait'] / $sleep) {
+            $failed = false;
+            while ($i < (int)$options['max-wait']) {
                 sleep($sleep);
 
                 foreach ($diffsProgress as $projectId => $diff) {
@@ -518,6 +515,10 @@ class ProjectCommand extends Tasks
                     if ($diff->isCompleted()) {
                         $this->getIO()->writeln('Diff for project <info>' . $projectId . '</info> completed. ' . $diff->getReadableResult());
                         unset($diffsProgress[$projectId]);
+                    } elseif ($diff->isFailed()) {
+                        $this->getIO()->getErrorStyle()->error('Project ' . $projectId . ': ' . $this->getDiffWaitError($diff, (int)$options['max-wait']));
+                        unset($diffsProgress[$projectId]);
+                        $failed = true;
                     }
                 }
 
@@ -526,6 +527,15 @@ class ProjectCommand extends Tasks
                 if (empty($diffsProgress)) {
                     break;
                 }
+            }
+
+            foreach ($diffsProgress as $projectId => $diff) {
+                $this->getIO()->getErrorStyle()->error('Project ' . $projectId . ': ' . $this->getDiffWaitError($diff, (int)$options['max-wait']));
+                $failed = true;
+            }
+
+            if ($failed) {
+                return new ResultData(ResultData::EXITCODE_ERROR);
             }
         }
 
