@@ -48,6 +48,7 @@ $appVersion = trim(file_get_contents(__DIR__ . '/VERSION'));
 $commandClasses = [
   \DiffyCli\Commands\AuthCommand::class,
   \DiffyCli\Commands\DiffCommand::class,
+  \DiffyCli\Commands\FeedbackCommand::class,
   \DiffyCli\Commands\ScreenshotCommand::class,
   \DiffyCli\Commands\ProjectCommand::class,
 ];
