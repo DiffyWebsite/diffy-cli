@@ -85,7 +85,7 @@ class AuthCommand extends Tasks
         unset($password);
 
         if (empty($registration['token'])) {
-            $this->io()->error('The account was created but Diffy did not log it in. Log in at ' . Diffy::$uiBaseUrl . ' instead.');
+            $this->io()->error('The account was created but Diffy did not log it in. Log in at ' . Diffy::getUiBaseUrl() . ' instead.');
 
             return new ResultData(ResultData::EXITCODE_ERROR);
         }
@@ -204,11 +204,11 @@ class AuthCommand extends Tasks
                 return ['code' => self::EXITCODE_API_ACCESS_DISABLED, 'message' => $this->getApiAccessDisabledMessage()];
             }
 
-            return ['code' => ResultData::EXITCODE_ERROR, 'message' => 'The API key is not valid. Create one at ' . Diffy::$uiBaseUrl . 'keys.'];
+            return ['code' => ResultData::EXITCODE_ERROR, 'message' => 'The API key is not valid. Create one at ' . Diffy::getUiBaseUrl() . 'keys.'];
         }
 
         if (empty(Diffy::getApiToken())) {
-            return ['code' => ResultData::EXITCODE_ERROR, 'message' => 'The API key is not valid. Create one at ' . Diffy::$uiBaseUrl . 'keys.'];
+            return ['code' => ResultData::EXITCODE_ERROR, 'message' => 'The API key is not valid. Create one at ' . Diffy::getUiBaseUrl() . 'keys.'];
         }
 
         return null;
@@ -216,8 +216,8 @@ class AuthCommand extends Tasks
 
     private function getApiAccessDisabledMessage(): string
     {
-        return 'API access is not enabled for this account. Redeem a coupon at ' . Diffy::$uiBaseUrl
-            . 'profile or upgrade to a paid plan, then create a key at ' . Diffy::$uiBaseUrl . 'keys and run "diffy auth:login <key>".';
+        return 'API access is not enabled for this account. Redeem a coupon at ' . Diffy::getUiBaseUrl()
+            . 'profile or upgrade to a paid plan, then create a key at ' . Diffy::getUiBaseUrl() . 'keys and run "diffy auth:login <key>".';
     }
 
     private function getErrorMessage(\Exception $exception): string

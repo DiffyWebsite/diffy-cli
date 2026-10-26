@@ -52,6 +52,15 @@ diffy auth:status
 It exits with `0` when the key works, `1` when there is no valid key and `2` when the account has no API
 access. To get a password reset email: `diffy auth:reset-password jane@example.com`.
 
+To talk to another Diffy environment (e.g. staging) instead of production, set `DIFFY_API_HOST` to its
+hostname for every command, and log in with a key created in that environment:
+```shell script
+export DIFFY_API_HOST=staging.diffy.website
+diffy auth:login xxxxxxxxxxxx
+```
+
+Use a separate `DIFFYCLI_CONFIG` file for it if you don't want to overwrite your production key.
+
 ### Commands
 
 #### Take screenshots
