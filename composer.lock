@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "cdbc44bdd22b58e0daf18fc85fa384aa",
+    "content-hash": "c6eae8301731998214d6142b7b2f9208",
     "packages": [
         {
             "name": "consolidation/annotated-command",
@@ -501,16 +501,16 @@
         },
         {
             "name": "diffywebsite/diffy-php",
-            "version": "1.4.0",
+            "version": "1.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/DiffyWebsite/diffy-php.git",
-                "reference": "9787370ada33bbaa4785bb093092a868daf944a1"
+                "reference": "d4c4429026a97d16b84f10853c87fd397db8657c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/DiffyWebsite/diffy-php/zipball/9787370ada33bbaa4785bb093092a868daf944a1",
-                "reference": "9787370ada33bbaa4785bb093092a868daf944a1",
+                "url": "https://api.github.com/repos/DiffyWebsite/diffy-php/zipball/d4c4429026a97d16b84f10853c87fd397db8657c",
+                "reference": "d4c4429026a97d16b84f10853c87fd397db8657c",
                 "shasum": ""
             },
             "require": {
@@ -543,9 +543,9 @@
             ],
             "support": {
                 "issues": "https://github.com/DiffyWebsite/diffy-php/issues",
-                "source": "https://github.com/DiffyWebsite/diffy-php/tree/1.4.0"
+                "source": "https://github.com/DiffyWebsite/diffy-php/tree/1.5.0"
             },
-            "time": "2026-05-06T15:08:00+00:00"
+            "time": "2026-10-26T23:37:16+00:00"
         },
         {
             "name": "grasmash/expander",
@@ -2879,13 +2879,13 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": {},
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
         "php": "^8.2",
         "ext-json": "*"
     },
-    "platform-dev": {},
-    "plugin-api-version": "2.6.0"
+    "platform-dev": [],
+    "plugin-api-version": "2.3.0"
 }
