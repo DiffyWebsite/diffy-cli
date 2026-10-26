@@ -33,7 +33,24 @@ Once you have a key -- run
 diffy auth:login xxxxxxxxxxxx
 ```
 
-This will save the key for future usages.
+This will save the key for future usages, to `~/.diffy-cli/diffy-cli.yaml` (set `DIFFYCLI_CONFIG` to use another file).
+
+No account yet? Create one from the terminal:
+```shell script
+diffy auth:register --email=jane@example.com --name="Jane Doe" --coupon=CODE
+```
+
+The account gets a random password that is never shown. We email a link to set your own password, which
+you only need for the web dashboard. The command creates an API key and saves it, so you are logged in right
+away. The coupon is optional; without one (or a paid plan) the account has no API access.
+
+To check that the saved key works:
+```shell script
+diffy auth:status
+```
+
+It exits with `0` when the key works, `1` when there is no valid key and `2` when the account has no API
+access. To get a password reset email: `diffy auth:reset-password jane@example.com`.
 
 ### Commands
 
@@ -108,6 +125,18 @@ diffy project:compare PROJECT_ID prod custom --env2Url="https://custom.example.c
 ```
 
 Allowed environments are: prod, stage, dev, custom (long options: production, staging, development).
+
+Add `--wait` to wait for the diff to complete (`--max-wait` seconds, 1200 by default). The diff ID is printed
+first; the command then exits with a non-zero code if the diff fails or does not complete in time.
+
+#### Send feedback on a comparison
+
+```shell script
+diffy feedback:send DIFF_ID --rating=useful --comment="Caught a header overflow at 640px."
+```
+
+`--rating` is one of `useful`, `ok`, `not_useful`. The feedback is emailed to the Diffy team together with
+your account email.
 
 #### Update project(s)
 

@@ -27,8 +27,9 @@ class Config
      */
     public static function saveConfig($config)
     {
-        $configPrefix = 'DIFFYCLI';
-        $configDirectory = getenv($configPrefix . '_CONFIG') ?: getenv('HOME') . '/.diffy-cli';
+        // DIFFYCLI_CONFIG is the path of the file, the same one getConfig() reads.
+        $configFilePath = self::getConfigFilePath();
+        $configDirectory = dirname($configFilePath);
 
         $writable = is_dir($configDirectory)
             || (!file_exists($configDirectory) && @mkdir($configDirectory, 0777, true));
@@ -39,7 +40,6 @@ class Config
             );
         }
 
-        $configFilePath = $configDirectory . '/diffy-cli.yaml';
         $yaml = Yaml::dump($config);
 
         file_put_contents($configFilePath, $yaml);
@@ -53,8 +53,7 @@ class Config
      */
     public static function getConfig($should_exist = true)
     {
-        $configPrefix = 'DIFFYCLI';
-        $configFilePath = getenv($configPrefix . '_CONFIG') ?: getenv('HOME') . '/.diffy-cli/diffy-cli.yaml';
+        $configFilePath = self::getConfigFilePath();
 
         if (!file_exists($configFilePath)) {
             $config = [];
@@ -68,5 +67,10 @@ class Config
         }
 
         return $config;
+    }
+
+    private static function getConfigFilePath(): string
+    {
+        return getenv('DIFFYCLI_CONFIG') ?: getenv('HOME') . '/.diffy-cli/diffy-cli.yaml';
     }
 }

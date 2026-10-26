@@ -12,6 +12,8 @@ use Robo\Tasks;
 
 class DiffCommand extends Tasks
 {
+    use WaitForDiffTrait;
+
     /**
      * Create a diff from screenshots
      *
@@ -47,24 +49,17 @@ class DiffCommand extends Tasks
 
         $diffId = Diff::create($projectId, $screenshotId1, $screenshotId2, $name);
 
-        if (!empty($options['wait']) && $options['wait'] == true) {
-            $sleep = 10;
-            $max_wait = (int)$options['max-wait'];
-            sleep($sleep);
-            $i = 0;
-            $diff = Diff::retrieve($diffId);
-            while ($i < $max_wait / $sleep) {
-                if ($diff->isCompleted() || $diff->isFailed()) {
-                    break;
-                }
-                sleep($sleep);
-                $diff->refresh();
+        $this->io()->write($diffId);
 
-                $i += $sleep;
+        if (!empty($options['wait']) && $options['wait'] == true) {
+            $error = $this->waitForDiff($diffId, (int)$options['max-wait']);
+
+            if ($error) {
+                $this->io()->getErrorStyle()->error($error);
+
+                return new ResultData(ResultData::EXITCODE_ERROR);
             }
         }
-
-        $this->io()->write($diffId);
 
         // Successful exit.
         return new ResultData();
