@@ -9,6 +9,8 @@
 * Fixed --wait giving up after about two minutes. It now waits --max-wait seconds and exits non-zero when
   the diff fails or times out.
 * DIFFYCLI_CONFIG is now the config file path when saving too, as it already was when reading.
+* Set DIFFY_API_HOST to use another Diffy environment (e.g. staging) instead of production.
+* Updated dependencies, including guzzle 7.16 and symfony/yaml 7.4.21, to fix security advisories.
 
 ### 1.37
 
