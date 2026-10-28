@@ -9,7 +9,6 @@ use Diffy\Project;
 use Diffy\Screenshot;
 use DiffyCli\Config;
 use GuzzleHttp\Exception\InvalidArgumentException;
-use GuzzleHttp\Utils;
 use Robo\ResultData;
 use Robo\Tasks;
 use Symfony\Component\Console\Style\SymfonyStyle;
@@ -48,11 +47,11 @@ class ProjectCommand extends Tasks
                 return Yaml::parse($configuration, true);
             }
 
-            return Utils::jsonDecode($configuration, true);
-        } catch (InvalidArgumentException $exception) {
+            return json_decode($configuration, true, 512, JSON_THROW_ON_ERROR);
+        } catch (\JsonException $exception) {
             $this->getIO()->writeln('<error>File can not be parsed.<error>');
 
-            throw $exception;
+            throw new InvalidArgumentException('json_decode error: ' . $exception->getMessage(), 0, $exception);
         }
     }
 
